@@ -8,19 +8,9 @@ const ProductsSchema = new Schema({
         type: mongoose.Types.ObjectId,
         ref: "Categories"
     },
-    Stock: {type: Number},
-    size: [
-        {
-            0: {type: String},
-            1: {type: String},
-            2: {type: String}
-        }
-    ],
-    imageUrl: [
-        {
-            0: {type: String}
-        }
-    ],
+    stock: {type: Number},
+    size: [String],
+    imageUrl: [String],
     isActive: {type: Boolean},
 }, {
     timestamps: true,

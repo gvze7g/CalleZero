@@ -1,20 +1,81 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Download, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import AdminLayout from "../components/layout/AdminLayout";
 import StatCard from "../components/shared/StatCard";
 import ProductsTable from "../components/products/ProductsTable";
-import { productRows, productStats } from "../data/adminData";
 
 const ProductsPage = () => {
   const navigate = useNavigate();
 
+  const [products, setProducts] = useState([]);
+
+  const [stats, setStats] = useState([
+    { title: "Total Productos", value: "0" },
+    { title: "Stock Total", value: "0" },
+    { title: "Categorías", value: "0" },
+    { title: "Productos Activos", value: "0" },
+  ]);
+
+  const calculateStats = (data) => {
+    const totalStock = data.reduce((a, p) => a + Number(p.stock || 0), 0);
+
+    const totalCategories = new Set(
+      data.map((p) => p.categoryId?._id).filter(Boolean)
+    ).size;
+
+    const activeProducts = data.filter((p) => p.isActive).length;
+
+    setStats([
+      { title: "Total Productos", value: data.length },
+      { title: "Stock Total", value: totalStock },
+      { title: "Categorías", value: totalCategories },
+      { title: "Productos Activos", value: activeProducts },
+    ]);
+  };
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      const res = await fetch("http://localhost:4000/api/product");
+      if (!res.ok) throw new Error();
+
+      const data = await res.json();
+
+      setProducts(data);
+      calculateStats(data);
+    } catch {
+      toast.error("Error al cargar productos");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const res = await fetch(
+        `http://localhost:4000/api/product/${id}`,
+        { method: "DELETE" }
+      );
+
+      if (!res.ok) throw new Error();
+
+      toast.success("Producto eliminado");
+
+      setProducts((prev) => {
+        const updated = prev.filter((p) => p._id !== id);
+        calculateStats(updated);
+        return updated;
+      });
+    } catch {
+      toast.error("Error al eliminar producto");
+    }
+  };
+
   const handleExport = () => {
     toast.info("Exportando datos del catálogo...");
-    setTimeout(() => {
-      toast.success("Archivo CSV listo para descargar");
-    }, 900);
   };
 
   return (
@@ -52,13 +113,13 @@ const ProductsPage = () => {
       </section>
 
       <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {productStats.map((item) => (
+        {stats.map((item) => (
           <StatCard key={item.title} {...item} />
         ))}
       </section>
 
       <section className="mt-6">
-        <ProductsTable rows={productRows} />
+        <ProductsTable rows={products} onDelete={handleDelete} />
       </section>
     </AdminLayout>
   );

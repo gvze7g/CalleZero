@@ -1,9 +1,29 @@
 import categoriesModel from "../models/categories.js";
+import productModel from "../models/product.js";
 
 //SELECT
 export const getCategories = async (req, res) => {
-  const categories = await categoriesModel.find();
-  res.json(categories);
+  try {
+    const categories = await categoriesModel.find();
+
+    const categoriesWithCount = await Promise.all(
+      categories.map(async (category) => {
+        const productsCount = await productModel.countDocuments({
+          categoryId: category._id,
+        });
+
+        return {
+          ...category.toObject(),
+          productsCount,
+        };
+      })
+    );
+
+    res.json(categoriesWithCount);
+  } catch (error) {
+    console.log("Error: " + error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 //INSERT

@@ -1,19 +1,20 @@
 import express from "express";
 import productController from "../controller/productController.js";
+import multer from "multer";
 
-
-//Ocupo Router() para asignar los métodos
 const router = express.Router();
+
+const upload = multer({ dest: "uploads/" });
 
 router
   .route("/")
   .get(productController.getAll)
-  .post(productController.InsertProducts)
+  .post(upload.single("image"), productController.InsertProducts);
 
 router
   .route("/:id")
-  .put(productController.updateProduct)
-  .delete(productController.deleteProudct)
   .get(productController.getProductById)
+  .put(upload.single("image"), productController.updateProduct)
+  .delete(productController.deleteProduct);
 
 export default router;

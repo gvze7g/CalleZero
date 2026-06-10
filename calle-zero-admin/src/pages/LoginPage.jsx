@@ -8,18 +8,23 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-black text-white">
-      <div className="flex h-full w-full flex-col border border-[#0F1230]">
+    <div className="min-h-screen w-screen bg-black text-white overflow-y-auto">
+      
+      <div className="flex min-h-screen w-full flex-col border border-[#0F1230]">
+        
         <AuthHeader />
 
-        <main className="flex min-h-0 flex-1 items-center justify-center px-4 py-6 md:px-8">
-          <LoginCard
-            onForgotPassword={() => navigate("/forgot-password")}
-            onLogin={() => navigate("/dashboard")}
-          />
+        <main className="flex flex-1 items-center justify-center px-4 py-8 sm:py-10 md:px-8">
+          <div className="w-full flex justify-center">
+            <LoginCard
+              onForgotPassword={() => navigate("/forgot-password")}
+              onLogin={() => navigate("/dashboard")}
+            />
+          </div>
         </main>
 
         <AuthFooter />
+
       </div>
     </div>
   );

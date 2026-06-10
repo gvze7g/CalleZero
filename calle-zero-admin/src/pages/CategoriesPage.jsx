@@ -1,86 +1,161 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import AdminLayout from "../components/layout/AdminLayout";
 import StatCard from "../components/shared/StatCard";
 import Modal from "../components/shared/Modal";
 import CategoriesGrid from "../components/categories/CategoriesGrid";
-import { categoryRows, categoryStats } from "../data/adminData";
+import { categoryStats } from "../data/adminData";
 
 const CategoriesPage = () => {
-    const [categories, setCategories] = useState(categoryRows);
+    const [categories, setCategories] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCategory, setEditingCategory] = useState(null);
+
     const [formData, setFormData] = useState({
         name: "",
         description: "",
         products: "0",
     });
 
+    useEffect(() => {
+        loadCategories();
+    }, []);
+
+    const loadCategories = async () => {
+        try {
+            const response = await fetch(
+                "http://localhost:4000/api/categories"
+            );
+
+            if (!response.ok) {
+                throw new Error("Error loading categories");
+            }
+
+            const data = await response.json();
+
+            setCategories(data);
+        } catch (error) {
+            console.error(error);
+            toast.error("Error al cargar categorías");
+        }
+    };
+
     const openCreateModal = () => {
         setEditingCategory(null);
+
         setFormData({
             name: "",
             description: "",
             products: "0",
         });
+
         setIsModalOpen(true);
     };
 
     const openEditModal = (category) => {
         setEditingCategory(category);
+
         setFormData({
-            name: category.name,
-            description: category.description,
-            products: category.products,
+            name: category.name || "",
+            description: category.description || "",
+            products: "0",
         });
+
         setIsModalOpen(true);
     };
 
-    const handleDeleteCategory = (category) => {
-        setCategories((prev) => prev.filter((item) => item.name !== category.name));
-        toast.error(`Categoría eliminada: ${category.name}`);
+    const handleDeleteCategory = async (category) => {
+        try {
+            const response = await fetch(
+                `http://localhost:4000/api/categories/${category._id}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Error al eliminar");
+            }
+
+            toast.success("Categoría eliminada");
+
+            await loadCategories();
+        } catch (error) {
+            console.error(error);
+            toast.error(error.message);
+        }
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
 
-        if (!formData.name.trim() || !formData.description.trim()) {
-            toast.error("Debes completar el nombre y la descripción");
+        if (
+            !formData.name.trim() ||
+            !formData.description.trim()
+        ) {
+            toast.error("Debes completar nombre y descripción");
             return;
         }
 
-        if (editingCategory) {
-            setCategories((prev) =>
-                prev.map((item) =>
-                    item.name === editingCategory.name
-                        ? {
-                            ...item,
+        try {
+            if (editingCategory) {
+                const response = await fetch(
+                    `http://localhost:4000/api/categories/${editingCategory._id}`,
+                    {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
                             name: formData.name,
                             description: formData.description,
-                            products: formData.products,
-                        }
-                        : item
-                )
-            );
+                            isActive: true,
+                        }),
+                    }
+                );
 
-            toast.success("Categoría actualizada correctamente");
-        } else {
-            setCategories((prev) => [
-                {
-                    name: formData.name,
-                    description: formData.description,
-                    products: formData.products,
-                    date: "2026-04-23",
-                    icon: "Tags",
-                },
-                ...prev,
-            ]);
+                if (!response.ok) {
+                    throw new Error("Error al actualizar");
+                }
 
-            toast.success("Categoría creada correctamente");
+                toast.success("Categoría actualizada");
+            } else {
+                const response = await fetch(
+                    "http://localhost:4000/api/categories",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            name: formData.name,
+                            description: formData.description,
+                            isActive: true,
+                        }),
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Error al crear");
+                }
+
+                toast.success("Categoría creada");
+            }
+
+            await loadCategories();
+
+            setIsModalOpen(false);
+
+            setFormData({
+                name: "",
+                description: "",
+                products: "0",
+            });
+        } catch (error) {
+            console.error(error);
+            toast.error(error.message);
         }
-
-        setIsModalOpen(false);
     };
 
     return (
@@ -135,10 +210,14 @@ const CategoriesPage = () => {
                             <span className="font-[Open_Sans] text-[14px] font-bold text-white">
                                 Nombre
                             </span>
+
                             <input
                                 value={formData.name}
                                 onChange={(event) =>
-                                    setFormData((prev) => ({ ...prev, name: event.target.value }))
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        name: event.target.value,
+                                    }))
                                 }
                                 className="mt-2 h-[42px] w-full rounded-[8px] border border-white/10 bg-black px-4 font-[Open_Sans] text-white outline-none"
                                 placeholder="Ej: Sneakers"
@@ -149,6 +228,7 @@ const CategoriesPage = () => {
                             <span className="font-[Open_Sans] text-[14px] font-bold text-white">
                                 Descripción
                             </span>
+
                             <textarea
                                 value={formData.description}
                                 onChange={(event) =>
@@ -159,23 +239,6 @@ const CategoriesPage = () => {
                                 }
                                 className="mt-2 h-[110px] w-full resize-none rounded-[8px] border border-white/10 bg-black p-4 font-[Open_Sans] text-white outline-none"
                                 placeholder="Describe la categoría..."
-                            />
-                        </label>
-
-                        <label className="block">
-                            <span className="font-[Open_Sans] text-[14px] font-bold text-white">
-                                Cantidad de productos
-                            </span>
-                            <input
-                                value={formData.products}
-                                onChange={(event) =>
-                                    setFormData((prev) => ({
-                                        ...prev,
-                                        products: event.target.value,
-                                    }))
-                                }
-                                className="mt-2 h-[42px] w-full rounded-[8px] border border-white/10 bg-black px-4 font-[Open_Sans] text-white outline-none"
-                                placeholder="0"
                             />
                         </label>
 
@@ -192,7 +255,9 @@ const CategoriesPage = () => {
                                 type="submit"
                                 className="h-[44px] rounded-[10px] bg-[#6F6A68] font-[Open_Sans] text-[14px] font-bold text-white"
                             >
-                                {editingCategory ? "Guardar Cambios" : "Crear Categoría"}
+                                {editingCategory
+                                    ? "Guardar Cambios"
+                                    : "Crear Categoría"}
                             </button>
                         </div>
                     </form>

@@ -9,6 +9,7 @@ const ProductClassificationForm = ({
     onChange,
     selectedSize,
     onSelectSize,
+    categories,
 }) => {
     return (
         <SectionCard className="p-5">
@@ -26,21 +27,39 @@ const ProductClassificationForm = ({
                     <span className="font-[Open_Sans] text-[14px] font-bold text-white">
                         Categoría
                     </span>
-                    <input
-                        value={formData.category}
-                        onChange={(event) => onChange("category", event.target.value)}
+
+                    <select
+                        value={formData.categoryId}
+                        onChange={(event) =>
+                            onChange("categoryId", event.target.value)
+                        }
                         className="mt-2 h-[42px] w-full rounded-[8px] border border-white/10 bg-black px-4 font-[Open_Sans] text-white outline-none"
-                        placeholder="Streetwear"
-                    />
+                    >
+                        <option value="">
+                            Seleccione una categoría
+                        </option>
+
+                        {categories.map((category) => (
+                            <option
+                                key={category._id}
+                                value={category._id}
+                            >
+                                {category.name}
+                            </option>
+                        ))}
+                    </select>
                 </label>
 
                 <label>
                     <span className="font-[Open_Sans] text-[14px] font-bold text-white">
                         SKU (Opcional)
                     </span>
+
                     <input
                         value={formData.sku}
-                        onChange={(event) => onChange("sku", event.target.value)}
+                        onChange={(event) =>
+                            onChange("sku", event.target.value)
+                        }
                         className="mt-2 h-[42px] w-full rounded-[8px] border border-white/10 bg-black px-4 font-[Open_Sans] text-white outline-none"
                         placeholder="CZ-001"
                     />
@@ -58,10 +77,11 @@ const ProductClassificationForm = ({
                             type="button"
                             key={size}
                             onClick={() => onSelectSize(size)}
-                            className={`h-11 min-w-11 rounded-[8px] border border-white/10 px-4 font-[Open_Sans] text-[14px] font-bold ${selectedSize === size
+                            className={`h-11 min-w-11 rounded-[8px] border border-white/10 px-4 font-[Open_Sans] text-[14px] font-bold ${
+                                selectedSize === size
                                     ? "bg-[#6F6A68] text-white"
                                     : "bg-black text-white"
-                                }`}
+                            }`}
                         >
                             {size}
                         </button>

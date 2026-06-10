@@ -14,7 +14,7 @@ const CategoriesGrid = ({
 
             {categories.map((category) => (
                 <CategoryCard
-                    key={category.name}
+                    key={category._id}
                     category={category}
                     onEditCategory={onEditCategory}
                     onDeleteCategory={onDeleteCategory}

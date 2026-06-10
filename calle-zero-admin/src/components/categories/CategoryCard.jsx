@@ -4,7 +4,7 @@ import { ChevronRight, Edit3, MoreVertical, Trash2 } from "lucide-react";
 
 const CategoryCard = ({ category, onEditCategory, onDeleteCategory }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const IconComponent = Icons[category.icon] || Icons.Box;
+    const IconComponent = Icons.Box;
 
     return (
         <article className="relative rounded-[14px] border border-white/5 bg-[#1A1F2B]">
@@ -62,22 +62,27 @@ const CategoryCard = ({ category, onEditCategory, onDeleteCategory }) => {
                 <div className="mt-6 flex items-end justify-between">
                     <div>
                         <p className="font-[Montserrat] text-[26px] font-extrabold text-white">
-                            {category.products}
+                            {category.productsCount ?? 0}
                         </p>
                         <p className="font-[Open_Sans] text-[10px] font-bold uppercase text-white/55">
                             Productos
                         </p>
                     </div>
 
-                    <span className="rounded-full bg-white/10 px-3 py-1 font-[Open_Sans] text-[11px] font-bold text-white">
-                        Activo
-                    </span>
-                </div>
+                    <span 
+                        className={`rounded-full px-3 py-1 font-[Open_Sans] text-[11px] font-bold ${
+                            category.isActive
+                                ? "bg-green-500/20 text-green-400"
+                                : "bg-red-500/20 text-red-400"
+                        }`}>
+                        {category.isActive ? "Activo" : "Inactivo"}
+                </span>
+            </div>
             </div>
 
             <div className="flex items-center justify-between border-t border-white/10 px-5 py-4">
                 <p className="font-[Open_Sans] text-[11px] italic text-white/60">
-                    Actualizado: {category.date}
+                   Actualizado: {category.updatedAt ? new Date(category.updatedAt).toLocaleDateString() : "-"}
                 </p>
 
                 <button
