@@ -9,8 +9,8 @@ const ProductsSchema = new Schema({
         ref: "Categories"
     },
     stock: {type: Number},
-    size: [String],
-    imageUrl: [String],
+    size: [{ type: String }],
+    imageUrl: [{ type: String }],
     isActive: {type: Boolean},
 }, {
     timestamps: true,
