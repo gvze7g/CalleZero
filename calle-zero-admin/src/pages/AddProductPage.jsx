@@ -18,6 +18,7 @@ const AddProductPage = () => {
 
     const [selectedSize, setSelectedSize] = useState("M");
     const [categories, setCategories] = useState([]);
+    const [imageFile, setImageFile] = useState(null); // ← AGREGAR ESTO
 
     const [formData, setFormData] = useState({
         name: product?.name || "",
@@ -58,6 +59,10 @@ const AddProductPage = () => {
         }));
     };
 
+    const handleImageChange = (file) => {
+        setImageFile(file); // ← AGREGAR ESTO
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
 
@@ -71,16 +76,19 @@ const AddProductPage = () => {
         }
 
         try {
-            const productData = {
-                name: formData.name,
-                description: formData.description,
-                categoryId: formData.categoryId,
-                price: Number(formData.price),
-                stock: 0,
-                size: [selectedSize],
-                imageUrl: [],
-                isActive: true,
-            };
+            // ← CAMBIAR A FormData
+            const productFormData = new FormData();
+            productFormData.append("name", formData.name);
+            productFormData.append("description", formData.description);
+            productFormData.append("categoryId", formData.categoryId);
+            productFormData.append("price", Number(formData.price));
+            productFormData.append("stock", 0);
+            productFormData.append("size", JSON.stringify([selectedSize]));
+            productFormData.append("isActive", true);
+
+            if (imageFile) {
+                productFormData.append("file", imageFile); // ← AGREGAR IMAGEN
+            }
 
             const url =
                 mode === "edit"
@@ -91,11 +99,8 @@ const AddProductPage = () => {
 
             const response = await fetch(url, {
                 method,
-                headers: {
-                    "Content-Type": "application/json",
-                },
                 credentials: "include",
-                body: JSON.stringify(productData),
+                body: productFormData, // ← SIN headers Content-Type
             });
 
             const data = await response.json();
@@ -170,7 +175,7 @@ const AddProductPage = () => {
                             onChange={handleChange}
                         />
 
-                        <ProductMediaCard />
+                        <ProductMediaCard onImageChange={handleImageChange} /> {/* ← AGREGAR PROP */}
 
                         <button
                             type="submit"
