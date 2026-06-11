@@ -17,9 +17,13 @@ import cors from "cors";
 
 const app = express();
 
+console.log("✅ app.js cargado");
+
 app.use(cors({
     origin: ["http://localhost:5173", "http://localhost:5174"],
-    credentials: true
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
 }))
 
 app.use(cookieParser());
@@ -37,5 +41,8 @@ app.use("/api/loginUsers", loginUsersRoutes);
 app.use("/api/logout", logoutRoutes)
 app.use("/api/admin/users", adminUsersRoutes);
 app.use("/api/admin/recovery", recoveryAdminRoutes);
+
+console.log("✅ Todas las rutas registradas");
+console.log("✅ /api/loginAdmin disponible");
 
 export default app;

@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs"; //Encriptar
 import jsonwebtoken from "jsonwebtoken"; //token
 
-import adminModel from "../models/administrador.js";
+import userModel from "../models/users.js"; // ← CAMBIAR AQUÍ
 
 import { config } from "../config.js";
 
@@ -10,29 +10,40 @@ const loginAdminController = {}
 
 loginAdminController.login = async (req, res) => {
   try {
+    console.log("📍 Login POST recibido:", req.body);
+
     //#1- Solicitar el correo y la contraseña
     const { email, password } = req.body;
 
+    console.log("📍 Email y password extraídos:", { email, password });
+
     //verificar si el correo existe en la bd
-    const userFound = await adminModel.findOne({ email });
+    const userFound = await userModel.findOne({ email }); // ← CAMBIAR AQUÍ
+
+    console.log("🔍 Usuario encontrado:", userFound ? userFound.email : "NO ENCONTRADO");
 
     //Si no lo encuentra
     if (!userFound) {
-      return res.status(404).json({ message: "Admin not found" });
+      console.log("❌ Usuario no encontrado para email:", email);
+      return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
     //Verificar si la cuenta está bloqueada
     if (userFound.timeOut && userFound.timeOut > Date.now()) {
+      console.log("🔒 Cuenta bloqueada para:", email);
       return res.status(403).json({ message: "Cuenta bloqueada" });
     }
 
     //Verificar la contraseña
     const isMatch = await bcrypt.compare(password, userFound.password);
 
+    console.log("🔐 Contraseña coincide:", isMatch);
+
     if (!isMatch) {
       //Si se equivoca en la contraseña
-      //Vamos a sumarle 1 a los intentos fallidos
       userFound.loginAttempts = (userFound.loginAttempts || 0) + 1;
+
+      console.log("❌ Contraseña incorrecta. Intentos:", userFound.loginAttempts);
 
       //Bloquear la cuenta despues de 5 intentos fallidos
       if (userFound.loginAttempts >= 5) {
@@ -40,6 +51,7 @@ loginAdminController.login = async (req, res) => {
         userFound.loginAttempts = 0;
 
         await userFound.save();
+        console.log("🔒 Cuenta bloqueada después de 5 intentos");
         return res.status(403).json({ message: "Cuenta bloqueada" });
       }
 
@@ -52,10 +64,12 @@ loginAdminController.login = async (req, res) => {
     userFound.timeOut = null;
     await userFound.save();
 
+    console.log("✅ Login exitoso para:", email);
+
     //Generar el token
     const token = jsonwebtoken.sign(
       //#1- ¿que vamos a guardar?
-      { id: userFound._id, userType: "administrator" },
+      { id: userFound._id, userType: "user" }, // ← CAMBIAR AQUÍ
       //#2- Secret key
       config.JWT.secret,
       //#3- Tiempo de expiración
@@ -65,11 +79,13 @@ loginAdminController.login = async (req, res) => {
     //Guardamos el token en una cookie
     res.cookie("authCookie", token);
 
+    console.log("🎫 Token generado y guardado en cookie");
+
     //Listo!
     return res.status(200).json({message: "Login exitoso"})
   } catch (error) {
-    console.log("error"+error)
-    return res.status(500).json({message: "Internal server error"})
+    console.log("💥 ERROR en login:", error)
+    return res.status(500).json({message: "Internal server error", error: error.message})
   }
 };
 

@@ -2,7 +2,7 @@ import jsonwebtoken from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
-import AdminModel from "../models/administrador.js";
+import userModel from "../models/users.js"; // ← CAMBIAR AQUÍ
 import { config } from "../config.js";
 
 const recoveryPasswordAdminController = {};
@@ -58,10 +58,10 @@ recoveryPasswordAdminController.requestCode = async (req, res) => {
       return res.status(400).json({ success: false, message: "Email requerido" });
     }
 
-    const userFound = await AdminModel.findOne({ email });
+    const userFound = await userModel.findOne({ email }); // ← CAMBIAR AQUÍ
 
     if (!userFound) {
-      return res.status(404).json({ success: false, message: "Admin no encontrado" });
+      return res.status(404).json({ success: false, message: "Usuario no encontrado" });
     }
 
     // Generar código de 6 dígitos
@@ -169,7 +169,7 @@ recoveryPasswordAdminController.newPassword = async (req, res) => {
     // Hashear nueva contraseña
     const passwordHash = await bcrypt.hash(newPassword, 10);
 
-    await AdminModel.findOneAndUpdate(
+    await userModel.findOneAndUpdate( // ← CAMBIAR AQUÍ
       { email: decoded.email },
       { password: passwordHash },
       { new: true }
