@@ -1,6 +1,6 @@
 import dotenv from "dotenv"
 
-//ejecutamos la libreria dotenv
+
 dotenv.config()
 
 export const config = {
@@ -19,8 +19,8 @@ export const config = {
     },
 
     cloudinary:{
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,      // ✅ Cambiar de cloudinary_name
-        api_key: process.env.CLOUDINARY_API_KEY,             // ✅ Cambiar de cloudinary_api_key
-        api_secret: process.env.CLOUDINARY_API_SECRET         // ✅ Cambiar de cloudinary_api_secret
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,     
+        api_key: process.env.CLOUDINARY_API_KEY,             
+        api_secret: process.env.CLOUDINARY_API_SECRET         
     },
 }

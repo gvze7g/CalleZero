@@ -5,20 +5,20 @@ import useLogin from "../hooks/useLogin";
 
 const LoginPage = () => {
   const {
-  form,
-  loading,
-  navigate,
-  handleChange,
-  handleLogin,
-} = useLogin();
+    form,
+    loading,
+    navigate,
+    handleChange,
+    handleLogin,
+  } = useLogin();
 
   return (
-    <div className="min-h-screen w-screen bg-black text-white overflow-y-auto">
-      <div className="flex min-h-screen w-full flex-col border border-[#0F1230]">
+    <div className="h-screen overflow-hidden bg-black text-white">
+      <div className="flex h-full flex-col">
         <AuthHeader />
 
-        <main className="flex flex-1 items-center justify-center px-4 py-8 sm:py-10 md:px-8">
-          <div className="w-full flex justify-center">
+        <main className="flex flex-1 items-center justify-center px-4 py-2">
+          <div className="w-full max-w-md">
             <LoginCard
               email={form.email}
               password={form.password}

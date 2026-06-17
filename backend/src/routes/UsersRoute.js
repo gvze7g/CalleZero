@@ -1,17 +1,16 @@
 import express from "express";
 import controllerUsers from "../controller/UsersController.js";
+import { verifyToken } from "../middlewares/verifyToken.js";
 
-
-//Ocupo Router() para asignar los métodos
 const router = express.Router();
 
 router
   .route("/")
-  .get(controllerUsers.getAll)
+  .get(controllerUsers.getAll);
 
 router
   .route("/:id")
-  .put(controllerUsers.updateUsers)
-  .delete(controllerUsers.deleteUsers)
+  .put(verifyToken, controllerUsers.updateUsers)
+  .delete(verifyToken, controllerUsers.deleteUsers);
 
 export default router;

@@ -6,19 +6,18 @@ import {
   updateCategories,
 } from "../controller/categoriesController.js";
 
-//Router() nos ayuda a colocar los métodos
-//que tendrá mi endpoint
+import { verifyToken } from "../middlewares/verifyToken.js";
 
 const router = express.Router();
 
 router
   .route("/")
   .get(getCategories)
-  .post(insertCategories);
+  .post(verifyToken, insertCategories);
 
 router
   .route("/:id")
-  .put(updateCategories)
-  .delete(deleteCategories);
+  .put(verifyToken, updateCategories)
+  .delete(verifyToken, deleteCategories);
 
 export default router;

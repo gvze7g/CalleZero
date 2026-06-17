@@ -8,9 +8,18 @@ import logo from "../../assets/logo-1.png";
 const Sidebar = ({ isSidebarOpen, onClose }) => {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    navigate("/login");
-    onClose();
+  const handleLogout = async () => {
+  try {
+      await fetch("http://localhost:4000/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      navigate("/login");
+      onClose();
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
   };
 
   return (
