@@ -1,77 +1,19 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import { Lock, Eye, EyeOff, ChevronLeft } from "lucide-react";
 import AuthHeader from "../components/auth/AuthHeader";
 import AuthFooter from "../components/auth/AuthFooter";
 import AuthInput from "../components/auth/AuthInput";
+import resetPassword from "../hooks/useResetPassword";
 
 const ResetPasswordPage = () => {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [showPassword, setShowPassword] = useState({
-    newPassword: false,
-    confirmPassword: false,
-  });
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!formData.newPassword.trim() || !formData.confirmPassword.trim()) {
-      toast.error("Completa ambas contraseñas");
-      return;
-    }
-
-    if (formData.newPassword.length < 8) {
-      toast.error("La contraseña debe tener mínimo 8 caracteres");
-      return;
-    }
-
-    if (formData.newPassword !== formData.confirmPassword) {
-      toast.error("Las contraseñas no coinciden");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const res = await fetch("http://localhost:4000/api/admin/recovery/new-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          newPassword: formData.newPassword,
-          confirmPassword: formData.confirmPassword,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        toast.success("Contraseña actualizada correctamente");
-        setTimeout(() => navigate("/login"), 600);
-      } else {
-        toast.error(data.message || "Error al actualizar contraseña");
-      }
-    } catch (error) {
-      toast.error("Error de conexión");
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const {
+      navigate,
+      formData,
+      showPassword,
+      loading,
+      handleChange,
+      togglePassword,
+      handleSubmit,
+  } = useResetPassword();
 
   return (
     <div className="min-h-screen w-screen bg-black text-white overflow-y-auto">
@@ -122,12 +64,7 @@ const ResetPasswordPage = () => {
 
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowPassword((prev) => ({
-                        ...prev,
-                        newPassword: !prev.newPassword,
-                      }))
-                    }
+                    onClick={() => togglePassword("newPassword")}
                     className="absolute right-3 sm:right-4 text-white/40 hover:text-white/60 transition"
                   >
                     {showPassword.newPassword ? (

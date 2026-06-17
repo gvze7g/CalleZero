@@ -2,6 +2,8 @@ import express from "express";
 import loginAdminController from "../controller/loginAdminController.js";
 import bcrypt from "bcryptjs";
 import userModel from "../models/users.js"; // ← CAMBIAR AQUÍ
+import jwt from "jsonwebtoken";
+import { config } from "../config.js";
 
 const router = express.Router();
 
@@ -44,6 +46,25 @@ router.post("/register", async (req, res) => {
   } catch (error) {
     console.log(" Error creating user:", error);
     return res.status(500).json({ message: "Error al crear usuario", error: error.message });
+  }
+});
+
+router.get("/me", (req, res) => {
+  try {
+    const token = req.cookies.authCookie;
+
+    if (!token) {
+      return res.status(401).json({ authenticated: false });
+    }
+
+    const decoded = jwt.verify(token, config.JWT.secret);
+
+    return res.status(200).json({
+      authenticated: true,
+      user: decoded,
+    });
+  } catch (error) {
+    return res.status(401).json({ authenticated: false });
   }
 });
 

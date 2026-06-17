@@ -77,7 +77,11 @@ loginAdminController.login = async (req, res) => {
     );
 
     //Guardamos el token en una cookie
-    res.cookie("authCookie", token);
+    res.cookie("authCookie", token,{
+      httpOnly: true,
+      sameSite: "lax",
+      secure: false,
+    });
 
     console.log("🎫 Token generado y guardado en cookie");
 

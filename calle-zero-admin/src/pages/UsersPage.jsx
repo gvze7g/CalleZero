@@ -1,239 +1,38 @@
-import React, { useMemo, useState, useEffect } from "react";
 import { Filter, ArrowUpDown, UserPlus, Users } from "lucide-react";
-import { toast } from "sonner";
 import AdminLayout from "../components/layout/AdminLayout";
 import StatCard from "../components/shared/StatCard";
 import Pagination from "../components/shared/Pagination";
 import Modal from "../components/shared/Modal";
 import UsersTabs from "../components/users/UsersTabs";
 import UsersGrid from "../components/users/UsersGrid";
+import useUser from "../hooks/useUsers.js";
 
 const UsersPage = () => {
-    const [users, setUsers] = useState([]);
-    const [roles, setRoles] = useState([]);
-    const [stats, setStats] = useState({});
-    const [activeTab, setActiveTab] = useState("Todos");
-    const [currentPage, setCurrentPage] = useState(1);
-    const [sortMode, setSortMode] = useState("name");
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const {
+        users,
+        stats,
+        roles,
+        activeTab,
+        setActiveTab,
+        currentPage,
+        setCurrentPage,
+        selectedUser,
+        setSelectedUser,
+        isUserModalOpen,
+        setIsUserModalOpen,
+        editingUser,
+        loading,
+        formData,
+        setFormData,
+        filteredUsers,
+        userStats,
+        openCreateModal,
+        openEditModal,
+        handleSubmitUser,
+        handleDeleteUser,
+        handleSort,
+    } = useUsers();
 
-    const [formData, setFormData] = useState({
-        fullName: "",
-        email: "",
-        role: "",
-    });
-
-    // Cargar usuarios y roles al montar
-    useEffect(() => {
-        loadUsers();
-        loadRoles();
-        loadStats();
-    }, []);
-
-    const loadUsers = async () => {
-        try {
-            setLoading(true);
-            const response = await fetch("http://localhost:4000/api/admin/users");
-            const data = await response.json();
-
-            if (data.success) {
-                setUsers(data.users);
-            } else {
-                toast.error("Error al cargar usuarios");
-            }
-        } catch (error) {
-            toast.error("Error de conexión");
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const loadRoles = async () => {
-        try {
-            // Aquí asumimos que tienes una ruta para obtener roles
-            // Si no la tienes, podemos usar los roles hardcodeados por ahora
-            setRoles(["Administrador", "Cliente"]);
-        } catch (error) {
-            console.error(error);
-            setRoles(["Administrador", "Cliente"]);
-        }
-    };
-
-    const loadStats = async () => {
-        try {
-            const response = await fetch("http://localhost:4000/api/admin/users/stats");
-            const data = await response.json();
-
-            if (data.success) {
-                setStats(data.stats);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const filteredUsers = useMemo(() => {
-        let result = [...users];
-
-        if (activeTab === "Administradores") {
-            result = result.filter((user) => user.role === "Administrador");
-        }
-
-        if (activeTab === "Clientes") {
-            result = result.filter((user) => user.role === "Cliente");
-        }
-
-        if (sortMode === "name") {
-            result.sort((a, b) => a.name.localeCompare(b.name));
-        }
-
-        if (sortMode === "role") {
-            result.sort((a, b) => a.role.localeCompare(b.role));
-        }
-
-        return result;
-    }, [users, activeTab, sortMode]);
-
-    const openCreateModal = () => {
-        setEditingUser(null);
-        setFormData({
-            fullName: "",
-            email: "",
-            role: roles[0] || "Cliente",
-        });
-        setIsUserModalOpen(true);
-    };
-
-    const openEditModal = (user) => {
-        setEditingUser(user);
-        setFormData({
-            fullName: user.name,
-            email: user.email,
-            role: user.role,
-        });
-        setSelectedUser(null);
-        setIsUserModalOpen(true);
-    };
-
-    const handleSubmitUser = async (event) => {
-        event.preventDefault();
-
-        if (!formData.fullName.trim() || !formData.email.trim()) {
-            toast.error("Debes completar nombre y correo");
-            return;
-        }
-
-        if (!formData.role) {
-            toast.error("Debes seleccionar un rol");
-            return;
-        }
-
-        try {
-            let response;
-
-            if (editingUser) {
-                // Actualizar usuario
-                response = await fetch(
-                    `http://localhost:4000/api/admin/users/${editingUser._id}`,
-                    {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            fullName: formData.fullName,
-                            email: formData.email,
-                            role: formData.role,
-                        }),
-                    }
-                );
-            } else {
-                // Crear usuario
-                response = await fetch("http://localhost:4000/api/admin/users", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        fullName: formData.fullName,
-                        email: formData.email,
-                        role: formData.role,
-                    }),
-                });
-            }
-
-            const data = await response.json();
-
-            if (data.success) {
-                toast.success(
-                    editingUser
-                        ? "Usuario actualizado correctamente"
-                        : "Usuario creado correctamente"
-                );
-                setIsUserModalOpen(false);
-                loadUsers();
-                loadStats();
-            } else {
-                toast.error(data.message || "Error al procesar el usuario");
-            }
-        } catch (error) {
-            toast.error("Error de conexión");
-            console.error(error);
-        }
-    };
-
-    const handleDeleteUser = async (user) => {
-        try {
-            const response = await fetch(
-                `http://localhost:4000/api/admin/users/${user._id}`,
-                {
-                    method: "DELETE",
-                }
-            );
-
-            const data = await response.json();
-
-            if (data.success) {
-                toast.error(`Usuario eliminado: ${user.name}`);
-                setSelectedUser(null);
-                loadUsers();
-                loadStats();
-            } else {
-                toast.error(data.message || "Error al eliminar usuario");
-            }
-        } catch (error) {
-            toast.error("Error de conexión");
-            console.error(error);
-        }
-    };
-
-    const handleSort = () => {
-        const nextSort = sortMode === "name" ? "role" : "name";
-        setSortMode(nextSort);
-        toast.info(
-            nextSort === "name"
-                ? "Usuarios ordenados por nombre"
-                : "Usuarios ordenados por rol"
-        );
-    };
-
-    const userStats = [
-        {
-            title: "Total de Usuarios",
-            value: stats.totalUsers || 0,
-            percentage: "+12%",
-        },
-        {
-            title: "Usuarios Activos",
-            value: stats.activeUsers || 0,
-            percentage: "+5%",
-        },
-        {
-            title: "Administradores",
-            value: stats.admins || 0,
-            percentage: "",
-        },
-    ];
 
     if (loading) {
         return (

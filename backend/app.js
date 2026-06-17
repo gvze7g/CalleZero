@@ -17,6 +17,7 @@ import recoveryUsersRoutes from "./src/routes/recoveryUserRoutes.js"
 import userProfileRoutes from "./src/routes/userProfile.js"
 import cors from "cors";
 
+
 const app = express();
 
 console.log("app.js cargado");

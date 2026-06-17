@@ -1,11 +1,13 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import AuthHeader from "../components/auth/AuthHeader";
 import AuthFooter from "../components/auth/AuthFooter";
 import ForgotPasswordCard from "../components/auth/ForgotPasswordCard";
+import useForgotPassword from "../hooks/useForgotPassword";
 
 const ForgotPasswordPage = () => {
-  const navigate = useNavigate();
+  const {
+    handleBackToLogin,
+    handleCodeSent,
+  } = useForgotPassword();
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-black text-white">
@@ -17,8 +19,8 @@ const ForgotPasswordPage = () => {
 
           <div className="relative z-10 w-full max-w-[440px]">
             <ForgotPasswordCard 
-              onBackToLogin={() => navigate("/login")}
-              onCodeSent={() => navigate("/verify-code")}
+              onBackToLogin={handleBackToLogin}
+              onCodeSent={handleCodeSent}
             />
 
             <p className="mt-8 text-center font-[Open_Sans] text-[15px] text-white/65">
