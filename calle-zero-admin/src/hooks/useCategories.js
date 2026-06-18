@@ -60,7 +60,10 @@ export default function useCategories() {
             setIsLoading(true);
 
             const response = await fetch(
-                "http://localhost:4000/api/categories"
+                "http://localhost:4000/api/categories",
+                {
+                    credentials: "include",
+                }
             );
 
             if (!response.ok) {
@@ -111,6 +114,7 @@ export default function useCategories() {
                 `http://localhost:4000/api/categories/${category._id}`,
                 {
                     method: "DELETE",
+                    credentials: "include",
                 }
             );
 
@@ -147,6 +151,7 @@ export default function useCategories() {
                         headers: {
                             "Content-Type": "application/json",
                         },
+                        credentials: "include",
                         body: JSON.stringify({
                             name: formData.name,
                             description: formData.description,
@@ -168,6 +173,7 @@ export default function useCategories() {
                         headers: {
                             "Content-Type": "application/json",
                         },
+                        credentials: "include",
                         body: JSON.stringify({
                             name: formData.name,
                             description: formData.description,

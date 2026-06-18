@@ -5,7 +5,7 @@ import Pagination from "../components/shared/Pagination";
 import Modal from "../components/shared/Modal";
 import UsersTabs from "../components/users/UsersTabs";
 import UsersGrid from "../components/users/UsersGrid";
-import useUser from "../hooks/useUsers.js";
+import useUsers from "../hooks/useUsers.js";
 
 const UsersPage = () => {
     const {

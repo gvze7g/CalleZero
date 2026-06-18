@@ -43,7 +43,13 @@ export default function useProducts() {
   const loadProducts = async () => {
     try {
       const res = await fetch(
-        "http://localhost:4000/api/product"
+        "http://localhost:4000/api/product",
+        { method: "GET" ,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
       );
 
       if (!res.ok) {
@@ -65,6 +71,7 @@ export default function useProducts() {
         `http://localhost:4000/api/product/${id}`,
         {
           method: "DELETE",
+          credentials: "include",
         }
       );
 

@@ -38,7 +38,13 @@ const useUsers = () => {
       setLoading(true);
 
       const response = await fetch(
-        "http://localhost:4000/api/admin/users"
+        "http://localhost:4000/api/admin/users",
+        { method: "GET" ,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
       );
 
       const data = await response.json();
@@ -68,7 +74,10 @@ const useUsers = () => {
   const loadStats = async () => {
     try {
       const response = await fetch(
-        "http://localhost:4000/api/admin/users/stats"
+        "http://localhost:4000/api/admin/users/stats",
+        {
+          credentials: "include",
+        }
       );
 
       const data = await response.json();
@@ -163,6 +172,7 @@ const useUsers = () => {
             headers: {
               "Content-Type": "application/json",
             },
+            credentials: "include",
             body: JSON.stringify({
               fullName: formData.fullName,
               email: formData.email,
@@ -178,6 +188,7 @@ const useUsers = () => {
             headers: {
               "Content-Type": "application/json",
             },
+            credentials: "include",
             body: JSON.stringify({
               fullName: formData.fullName,
               email: formData.email,
@@ -217,6 +228,7 @@ const useUsers = () => {
         `http://localhost:4000/api/admin/users/${user._id}`,
         {
           method: "DELETE",
+          credentials: "include", 
         }
       );
 
