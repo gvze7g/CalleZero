@@ -11,7 +11,7 @@ router
   .route("/")
   .get(productController.getAll)
   .post(
-    upload.single("image"),
+    upload.array("images", 4),
     productController.InsertProducts
   );
 
@@ -19,7 +19,7 @@ router
   .route("/:id")
   .get(productController.getProductById)
   .put(
-    upload.single("image"),
+    upload.array("images", 4),
     productController.updateProduct
   )
   .delete(productController.deleteProduct);

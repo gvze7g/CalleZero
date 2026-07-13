@@ -1,5 +1,5 @@
-
 import { ChevronLeft } from "lucide-react";
+import { toast } from "sonner";
 import AdminLayout from "../components/layout/AdminLayout";
 import ProductGeneralForm from "../components/addProduct/ProductGeneralForm";
 import ProductClassificationForm from "../components/addProduct/ProductClassificationForm";
@@ -14,11 +14,15 @@ const AddProductPage = () => {
         mode,
         formData,
         categories,
-        selectedSize,
-        setSelectedSize,
+        selectedSizes,
+        toggleSize,
+        availableSizes,
         handleChange,
+        imagePreviews,
         handleImageChange,
+        errors,
         handleSubmit,
+        maxImages,
     } = useAddProduct();
 
     return (
@@ -53,14 +57,17 @@ const AddProductPage = () => {
                         <ProductGeneralForm
                             formData={formData}
                             onChange={handleChange}
+                            errors={errors}
                         />
 
                         <ProductClassificationForm
                             formData={formData}
                             onChange={handleChange}
-                            selectedSize={selectedSize}
-                            onSelectSize={setSelectedSize}
+                            selectedSizes={selectedSizes}
+                            onToggleSize={toggleSize}
+                            availableSizes={availableSizes}
                             categories={categories}
+                            errors={errors}
                         />
                     </div>
 
@@ -68,9 +75,15 @@ const AddProductPage = () => {
                         <ProductPriceCard
                             formData={formData}
                             onChange={handleChange}
+                            errors={errors}
                         />
 
-                        <ProductMediaCard onImageChange={handleImageChange} />
+                        <ProductMediaCard
+                            previews={imagePreviews}
+                            onImageChange={handleImageChange}
+                            maxImages={maxImages}
+                            error={errors.images}
+                        />
 
                         <button
                             type="submit"

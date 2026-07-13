@@ -3,7 +3,6 @@ import adminRoutes from "../backend/src/routes/administrador.js"
 import categoriesRoutes from "../backend/src/routes/categories.js"
 import orderRoutes from "../backend/src/routes/orders.js"
 import productRoute from "./src/routes/productRoute.js"
-import promotionRoute from "./src/routes/promotionRoute.js"
 import limiter from "./src/middlewares/rate-middle.js";
 import cookieParser from "cookie-parser";
 import usersRoute from "./src/routes/UsersRoute.js"
@@ -36,7 +35,6 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/product", productRoute);
-app.use("/api/promotion", promotionRoute);
 app.use("/api/user", usersRoute);
 app.use("/api/registerUser", registerUsers);
 app.use("/api/loginUser", loginUsersRoutes);

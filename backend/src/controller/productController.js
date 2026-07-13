@@ -1,5 +1,5 @@
 import productModel from "../models/product.js";
-import cloudinary from "../Utils/cloudinary.js";  // ✅ IMPORTAR CLOUDINARY CORRECTAMENTE
+import cloudinary from "../Utils/cloudinary.js";
 import fs from "fs";
 
 const productController = {};
@@ -41,13 +41,42 @@ productController.getProductById = async (req, res) => {
 };
 
 /* =========================
+   Helper: limpia archivos locales temporales
+========================= */
+const cleanupLocalFiles = (files = []) => {
+  files.forEach((file) => {
+    try {
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+    } catch (err) {
+      console.log("No se pudo borrar archivo temporal:", file.path);
+    }
+  });
+};
+
+/* =========================
+   Helper: sube varios archivos a Cloudinary
+========================= */
+const uploadFilesToCloudinary = async (files = []) => {
+  const urls = [];
+
+  for (const file of files) {
+    const result = await cloudinary.uploader.upload(file.path);
+    urls.push(result.secure_url);
+  }
+
+  return urls;
+};
+
+/* =========================
    CREATE PRODUCT
 ========================= */
 productController.InsertProducts = async (req, res) => {
   try {
     console.log("📍 POST /product recibido");
     console.log("Body:", req.body);
-    console.log("File:", req.file);
+    console.log("Files:", req.files);
 
     const {
       name,
@@ -61,27 +90,28 @@ productController.InsertProducts = async (req, res) => {
     } = req.body;
 
     if (!name || !price || !categoryId) {
-      if (req.file) fs.unlinkSync(req.file.path);
+      cleanupLocalFiles(req.files);
       return res.status(400).json({ message: "Faltan campos requeridos" });
     }
 
     let imageUrl = [];
 
-    if (req.file) {
+    if (req.files && req.files.length > 0) {
       try {
-        console.log("📤 Subiendo a Cloudinary:", req.file.path);
-        
-        const result = await cloudinary.uploader.upload(req.file.path);
-        imageUrl = [result.secure_url];
-        
-        console.log("✅ Imagen subida:", result.secure_url);
-        
-        // Eliminar archivo local
-        fs.unlinkSync(req.file.path);
+        console.log(`📤 Subiendo ${req.files.length} imagen(es) a Cloudinary`);
+
+        imageUrl = await uploadFilesToCloudinary(req.files);
+
+        console.log("✅ Imágenes subidas:", imageUrl);
       } catch (uploadError) {
         console.log("❌ Error en Cloudinary:", uploadError);
-        if (req.file) fs.unlinkSync(req.file.path);
-        return res.status(500).json({ message: "Error subiendo imagen", error: uploadError.message });
+        cleanupLocalFiles(req.files);
+        return res.status(500).json({
+          message: "Error subiendo imagen",
+          error: uploadError.message,
+        });
+      } finally {
+        cleanupLocalFiles(req.files);
       }
     }
 
@@ -109,8 +139,10 @@ productController.InsertProducts = async (req, res) => {
     });
   } catch (error) {
     console.log("💥 Error en InsertProducts:", error);
-    if (req.file) fs.unlinkSync(req.file.path);
-    return res.status(500).json({ message: "Internal server error", error: error.message });
+    cleanupLocalFiles(req.files);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 
@@ -128,27 +160,43 @@ productController.updateProduct = async (req, res) => {
       size,
       isActive,
       sku,
+      existingImages, // urls que el frontend quiere conservar
     } = req.body;
 
     const product = await productModel.findById(req.params.id);
 
     if (!product) {
-      if (req.file) fs.unlinkSync(req.file.path);
+      cleanupLocalFiles(req.files);
       return res.status(404).json({ message: "Product not found" });
     }
 
-    let imageUrl = product.imageUrl;
-
-    if (req.file) {
+    // Imágenes que se conservan (si no llega el campo, se conservan todas las actuales)
+    let keptImages = product.imageUrl;
+    if (existingImages !== undefined) {
       try {
-        const result = await cloudinary.uploader.upload(req.file.path);
-        imageUrl = [result.secure_url];
-        fs.unlinkSync(req.file.path);
-      } catch (uploadError) {
-        if (req.file) fs.unlinkSync(req.file.path);
-        return res.status(500).json({ message: "Error subiendo imagen", error: uploadError.message });
+        keptImages = JSON.parse(existingImages);
+      } catch {
+        keptImages = [];
       }
     }
+
+    let newImageUrls = [];
+
+    if (req.files && req.files.length > 0) {
+      try {
+        newImageUrls = await uploadFilesToCloudinary(req.files);
+      } catch (uploadError) {
+        cleanupLocalFiles(req.files);
+        return res.status(500).json({
+          message: "Error subiendo imagen",
+          error: uploadError.message,
+        });
+      } finally {
+        cleanupLocalFiles(req.files);
+      }
+    }
+
+    const imageUrl = [...keptImages, ...newImageUrls].slice(0, 4);
 
     const parsedSize = typeof size === "string" ? JSON.parse(size) : size;
 
@@ -174,8 +222,10 @@ productController.updateProduct = async (req, res) => {
     });
   } catch (error) {
     console.log("Error: ", error);
-    if (req.file) fs.unlinkSync(req.file.path);
-    return res.status(500).json({ message: "Internal server error", error: error.message });
+    cleanupLocalFiles(req.files);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 
