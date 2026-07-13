@@ -1,6 +1,7 @@
 import React from "react";
 
 const ProductFilters = ({
+    categories = [],
     selectedCategories,
     toggleCategory,
     showCategories,
@@ -28,20 +29,21 @@ const ProductFilters = ({
 
                 {showCategories && (
                     <>
-                        {[
-                            ["hoodies", "Hoodies"],
-                            ["tshirts", "Camisetas"],
-                            ["pants", "Pantalones"],
-                            ["accessories", "Accesorios"],
-                        ].map(([value, label]) => (
-                            <label key={value} className="block cursor-pointer">
+                        {categories.length === 0 && (
+                            <p className="text-xs text-gray-600">
+                                No hay categorías disponibles
+                            </p>
+                        )}
+
+                        {categories.map((category) => (
+                            <label key={category.id} className="block cursor-pointer">
                                 <input
                                     type="checkbox"
-                                    checked={selectedCategories.includes(value)}
-                                    onChange={() => toggleCategory(value)}
+                                    checked={selectedCategories.includes(category.id)}
+                                    onChange={() => toggleCategory(category.id)}
                                     className="accent-purple-500"
                                 />{" "}
-                                {label}
+                                {category.name}
                             </label>
                         ))}
                     </>

@@ -2,21 +2,21 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useRef, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Menu, Search, ShoppingCart, X, LogOut, User } from "lucide-react";
-import { initialCart } from "../../data/cartData";
 import { toast } from "sonner";
+import useAuth from "../../hooks/useAuth";
+import useCart from "../../hooks/useCart";
 
 const Navbar = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
+    const { user, isAuthenticated, isLoading: isLoadingUser, setUser } = useAuth();
+    const { itemCount } = useCart();
+
     const [menuOpen, setMenuOpen] = useState(false);
     const [indicatorStyle, setIndicatorStyle] = useState({});
-    const [userData, setUserData] = useState(null);
-    const [isLoadingUser, setIsLoadingUser] = useState(true);
     const [profileOpen, setProfileOpen] = useState(false);
     const linksRef = useRef({});
-
-    const cartCount = initialCart.reduce((total, item) => total + item.quantity, 0);
 
     const navLinks = [
         { path: "/", label: "Inicio" },
@@ -24,32 +24,6 @@ const Navbar = () => {
         { path: "/categories", label: "Categorías" },
         { path: "/contact", label: "Contacto" },
     ];
-
-    useEffect(() => {
-        loadUserData();
-    }, []);
-
-    const loadUserData = async () => {
-        try {
-            const response = await fetch("http://localhost:4000/api/users/me", {
-                method: "GET",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log("Usuario logueado:", data);
-                setUserData(data);
-            }
-        } catch (error) {
-            console.error("No hay usuario logueado:", error);
-        } finally {
-            setIsLoadingUser(false);
-        }
-    };
 
     const handleLogout = async () => {
         try {
@@ -60,7 +34,7 @@ const Navbar = () => {
 
             if (response.ok) {
                 toast.success("Sesión cerrada");
-                setUserData(null);
+                setUser(null);
                 setProfileOpen(false);
                 navigate("/");
             }
@@ -71,8 +45,8 @@ const Navbar = () => {
     };
 
     const getInitials = () => {
-        if (!userData?.fullName) return "U";
-        return userData.fullName
+        if (!user?.fullName) return "U";
+        return user.fullName
             .split(" ")
             .map((word) => word[0])
             .join("")
@@ -159,12 +133,14 @@ const Navbar = () => {
                             className="relative transition hover:text-purple-500"
                         >
                             <ShoppingCart size={20} strokeWidth={1.7} />
-                            <span className="absolute -right-2 -top-2 rounded-full bg-purple-500 px-1.5 text-[10px] font-bold text-black">
-                                {cartCount}
-                            </span>
+                            {itemCount > 0 && (
+                                <span className="absolute -right-2 -top-2 rounded-full bg-purple-500 px-1.5 text-[10px] font-bold text-black">
+                                    {itemCount}
+                                </span>
+                            )}
                         </button>
 
-                        {!isLoadingUser && userData ? (
+                        {!isLoadingUser && isAuthenticated ? (
                             <div className="relative">
                                 <button
                                     type="button"
@@ -174,14 +150,14 @@ const Navbar = () => {
                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500 text-black font-bold text-sm">
                                         {getInitials()}
                                     </div>
-                                    <span className="text-sm text-white">{userData.fullName?.split(" ")[0]}</span>
+                                    <span className="text-sm text-white">{user.fullName?.split(" ")[0]}</span>
                                 </button>
 
                                 {profileOpen && (
                                     <div className="absolute right-0 top-12 w-48 rounded-2xl border border-white/10 bg-[#111] shadow-[0_10px_40px_rgba(168,85,247,0.25)]">
                                         <div className="border-b border-white/10 px-4 py-3">
-                                            <p className="font-bold text-white text-sm">{userData.fullName}</p>
-                                            <p className="text-xs text-white/50">{userData.email}</p>
+                                            <p className="font-bold text-white text-sm">{user.fullName}</p>
+                                            <p className="text-xs text-white/50">{user.email}</p>
                                         </div>
                                         <button
                                             type="button"
@@ -278,11 +254,11 @@ const Navbar = () => {
                                 </div>
 
                                 <div className="space-y-3 border-t border-white/10 pt-6">
-                                    {userData ? (
+                                    {isAuthenticated ? (
                                         <>
                                             <div className="rounded-2xl bg-purple-500/10 px-5 py-4 border border-purple-500/30">
-                                                <p className="font-bold text-white text-sm">{userData.fullName}</p>
-                                                <p className="text-xs text-white/60">{userData.email}</p>
+                                                <p className="font-bold text-white text-sm">{user.fullName}</p>
+                                                <p className="text-xs text-white/60">{user.email}</p>
                                             </div>
                                             <button
                                                 type="button"

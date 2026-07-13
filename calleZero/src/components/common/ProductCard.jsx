@@ -1,12 +1,8 @@
-const categoryLabels = {
-    hoodies: "Hoodies",
-    tshirts: "Camisetas",
-    pants: "Pantalones",
-    accessories: "Accesorios",
-};
-
 const ProductCard = ({ product, onClick, compact = false }) => {
     if (!product) return null;
+
+    const image = product.imageUrl?.[0];
+    const categoryName = product.categoryId?.name || "Sin categoría";
 
     return (
         <article
@@ -15,12 +11,12 @@ const ProductCard = ({ product, onClick, compact = false }) => {
         >
             <div className="relative overflow-hidden">
                 <span className="absolute left-2 top-2 z-10 rounded-full bg-black px-2 py-1 font-[Montserrat] text-[10px] text-white">
-                    {categoryLabels[product.category] || product.category}
+                    {categoryName}
                 </span>
 
-                {product.image ? (
+                {image ? (
                     <img
-                        src={product.image}
+                        src={image}
                         alt={product.name}
                         className="aspect-3/4 w-full object-cover transition duration-500 group-hover:scale-105"
                     />
@@ -35,7 +31,7 @@ const ProductCard = ({ product, onClick, compact = false }) => {
                 </h4>
 
                 <p className="mt-1 font-[Montserrat] text-xs text-purple-500 md:text-sm">
-                    {product.price}
+                    ${Number(product.price).toFixed(2)}
                 </p>
             </div>
         </article>

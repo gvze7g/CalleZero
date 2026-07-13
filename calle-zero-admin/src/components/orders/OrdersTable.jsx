@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Eye, MoreHorizontal, Search } from "lucide-react";
+import { MoreHorizontal, Search, Check } from "lucide-react";
 import { toast } from "sonner";
 import SectionCard from "../shared/SectionCard";
 import StatusBadge from "../shared/StatusBadge";
@@ -16,10 +16,13 @@ const statusMap = {
   Completados: "Completado",
 };
 
-const OrdersTable = ({ rows }) => {
+const statusOptions = ["Pendiente", "Procesando", "Enviado", "Completado"];
+
+const OrdersTable = ({ rows, onStatusChange }) => {
   const [activeTab, setActiveTab] = useState("Todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   const filteredRows = useMemo(() => {
     const selectedStatus = statusMap[activeTab];
@@ -40,13 +43,44 @@ const OrdersTable = ({ rows }) => {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setCurrentPage(1);
-    toast.info(`Filtro aplicado: ${tab}`);
   };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    toast.info(`Mostrando página ${page} de pedidos`);
   };
+
+  const toggleMenu = (rowId) => {
+    setOpenMenuId((prev) => (prev === rowId ? null : rowId));
+  };
+
+  const handleStatusSelect = (row, newStatus) => {
+    if (newStatus === row.status) {
+      setOpenMenuId(null);
+      return;
+    }
+
+    onStatusChange(row.rawId, newStatus);
+    setOpenMenuId(null);
+  };
+
+  const StatusMenu = ({ row }) => (
+    <div className="absolute right-0 top-9 z-20 w-44 overflow-hidden rounded-[10px] border border-white/10 bg-[#171C26] shadow-[0_10px_30px_rgba(0,0,0,0.4)]">
+      <p className="border-b border-white/10 px-3 py-2 font-[Open_Sans] text-[12px] font-bold text-white/50">
+        Cambiar estado
+      </p>
+      {statusOptions.map((option) => (
+        <button
+          key={option}
+          type="button"
+          onClick={() => handleStatusSelect(row, option)}
+          className="flex w-full items-center justify-between px-3 py-2 text-left font-[Open_Sans] text-[13px] text-white hover:bg-white/5"
+        >
+          {option}
+          {row.status === option && <Check size={14} className="text-purple-400" />}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <SectionCard className="overflow-hidden">
@@ -110,13 +144,17 @@ const OrdersTable = ({ rows }) => {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => toast.info(`Pedido seleccionado: ${row.id}`)}
-                  className="text-white/70"
-                >
-                  <MoreHorizontal size={18} />
-                </button>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => toggleMenu(row.id)}
+                    className="text-white/70"
+                  >
+                    <MoreHorizontal size={18} />
+                  </button>
+
+                  {openMenuId === row.id && <StatusMenu row={row} />}
+                </div>
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-3">
@@ -155,22 +193,6 @@ const OrdersTable = ({ rows }) => {
                     <StatusBadge type={row.statusType}>{row.status}</StatusBadge>
                   </div>
                 </div>
-              </div>
-
-              <div className="mt-4 flex items-center gap-3 text-white/75">
-                <button
-                  type="button"
-                  onClick={() => toast.success(`Abriendo detalles de ${row.id}`)}
-                >
-                  <Eye size={17} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => toast.info(`Más opciones para ${row.id}`)}
-                >
-                  <MoreHorizontal size={17} />
-                </button>
               </div>
             </div>
           ))}
@@ -249,22 +271,15 @@ const OrdersTable = ({ rows }) => {
                 </td>
 
                 <td className="border-t border-white/5 px-5 py-4">
-                  <div className="flex items-center justify-end gap-4 text-white/75">
+                  <div className="relative flex items-center justify-end text-white/75">
                     <button
                       type="button"
-                      onClick={() =>
-                        toast.success(`Abriendo detalles de ${row.id}`)
-                      }
-                    >
-                      <Eye size={17} />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => toast.info(`Más opciones para ${row.id}`)}
+                      onClick={() => toggleMenu(row.id)}
                     >
                       <MoreHorizontal size={17} />
                     </button>
+
+                    {openMenuId === row.id && <StatusMenu row={row} />}
                   </div>
                 </td>
               </tr>

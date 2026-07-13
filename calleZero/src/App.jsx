@@ -13,10 +13,13 @@ import Terms from "./pages/Terms";
 import About from "./pages/About";
 import Cart from "./pages/Cart";
 import Profile from "./pages/Profile";
+import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
 
 function App() {
   return (
-    <>
+    <AuthProvider>
+    <CartProvider>
       <Toaster
         position="top-right"
         richColors
@@ -46,7 +49,8 @@ function App() {
           <Route path="/profile" element={<Profile />} />
         </Routes>
       </Router>
-    </>
+    </CartProvider>
+    </AuthProvider>
   );
 }
 

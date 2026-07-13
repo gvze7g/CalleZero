@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import useAuth from "./useAuth";
 
 export default function useLogin() {
   const navigate = useNavigate();
+  const { checkAuth } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -64,6 +66,8 @@ export default function useLogin() {
         toast.error(data.message || "Credenciales incorrectas");
         return;
       }
+
+      await checkAuth();
 
       toast.success("Inicio de sesión exitoso");
 
