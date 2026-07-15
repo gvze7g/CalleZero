@@ -2,8 +2,46 @@ import React from "react";
 import * as Icons from "lucide-react";
 import { LogOut, X } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { sidebarLinks } from "../../data/adminData";
 import logo from "../../assets/logo-1.png";
+
+const sidebarLinks = [
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    icon: "LayoutDashboard",
+    path: "/dashboard",
+  },
+  {
+    key: "products",
+    label: "Productos",
+    icon: "Box",
+    path: "/products",
+  },
+  {
+    key: "add-product",
+    label: "Agregar Producto",
+    icon: "CirclePlus",
+    path: "/add-product",
+  },
+  {
+    key: "categories",
+    label: "Categorías",
+    icon: "Tags",
+    path: "/categories",
+  },
+  {
+    key: "orders",
+    label: "Pedidos",
+    icon: "ShoppingCart",
+    path: "/orders",
+  },
+  {
+    key: "users",
+    label: "Usuarios",
+    icon: "Users",
+    path: "/users",
+  },
+];
 
 const Sidebar = ({ isSidebarOpen, onClose }) => {
   const navigate = useNavigate();

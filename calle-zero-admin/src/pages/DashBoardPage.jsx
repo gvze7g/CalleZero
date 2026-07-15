@@ -5,13 +5,12 @@ import RecentOrdersTable from "../components/dashboard/RecentOrdersTable";
 import InventoryAlertsCard from "../components/dashboard/InventoryAlertsCard";
 import QuickActionsCard from "../components/dashboard/QuickActionsCard";
 import DailyGoalCard from "../components/dashboard/DailyGoalCard";
-import {
-  dashboardOrders,
-  dashboardStats,
-  inventoryAlerts,
-} from "../data/adminData";
+import useDashboard from "../hooks/useDashboard";
 
 const DashboardPage = () => {
+  const { stats, recentOrders, inventoryAlerts, dailyGoal, isLoading, loadError } =
+    useDashboard();
+
   return (
     <AdminLayout>
       <section>
@@ -24,21 +23,35 @@ const DashboardPage = () => {
         </p>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {dashboardStats.map((item) => (
-          <StatCard key={item.title} {...item} />
-        ))}
-      </section>
+      {loadError && (
+        <p className="mt-6 font-[Open_Sans] text-red-400">{loadError}</p>
+      )}
 
-      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1.9fr_0.95fr]">
-        <RecentOrdersTable rows={dashboardOrders} />
+      {isLoading ? (
+        <p className="mt-6 font-[Open_Sans] text-white/50">Cargando dashboard...</p>
+      ) : (
+        <>
+          <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {stats.map((item) => (
+              <StatCard key={item.title} {...item} />
+            ))}
+          </section>
 
-        <div className="space-y-6">
-          <InventoryAlertsCard items={inventoryAlerts} />
-          <QuickActionsCard />
-          <DailyGoalCard />
-        </div>
-      </section>
+          <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1.9fr_0.95fr]">
+            <RecentOrdersTable rows={recentOrders} />
+
+            <div className="space-y-6">
+              <InventoryAlertsCard items={inventoryAlerts} />
+              <QuickActionsCard />
+              <DailyGoalCard
+                salesToday={dailyGoal.salesToday}
+                goal={dailyGoal.goal}
+                percentage={dailyGoal.percentage}
+              />
+            </div>
+          </section>
+        </>
+      )}
     </AdminLayout>
   );
 };
