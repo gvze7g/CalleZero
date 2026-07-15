@@ -54,6 +54,7 @@ ordersController.getMyOrders = async (req, res) => {
 };
 
 // INSERT
+// INSERT
 ordersController.insertOrder = async (req, res) => {
     try {
         const { items, PaymentMethod, ShippingAddress } = req.body;
@@ -64,12 +65,30 @@ ordersController.insertOrder = async (req, res) => {
 
         let totalAmount = 0;
 
+        // Primero validamos que haya stock suficiente para TODO el carrito
         for (let i = 0; i < items.length; i++) {
             const productFound = await productsModel.findById(items[i].productId);
-            if (productFound) {
-                const subtotal = productFound.price * items[i].quantity;
-                totalAmount += subtotal;
+
+            if (!productFound) {
+                return res.status(404).json({
+                    message: `Producto no encontrado: ${items[i].name}`,
+                });
             }
+
+            if (productFound.stock < items[i].quantity) {
+                return res.status(400).json({
+                    message: `Stock insuficiente para "${productFound.name}". Disponible: ${productFound.stock}`,
+                });
+            }
+
+            totalAmount += productFound.price * items[i].quantity;
+        }
+
+        // Si todo el stock está OK, ahora sí descontamos y guardamos la orden
+        for (let i = 0; i < items.length; i++) {
+            await productsModel.findByIdAndUpdate(items[i].productId, {
+                $inc: { stock: -items[i].quantity },
+            });
         }
 
         const newOrder = new ordersModel({
@@ -119,11 +138,20 @@ ordersController.updateOrder = async (req, res) => {
 // DELETE
 ordersController.deleteOrder = async (req, res) => {
     try {
-        const deletedOrder = await ordersModel.findByIdAndDelete(req.params.id);
+        const order = await ordersModel.findById(req.params.id);
 
-        if (!deletedOrder) {
+        if (!order) {
             return res.status(404).json({ message: "Order not found" });
         }
+
+        // Devolver el stock de cada producto antes de borrar la orden
+        for (let i = 0; i < order.items.length; i++) {
+            await productsModel.findByIdAndUpdate(order.items[i].productId, {
+                $inc: { stock: order.items[i].quantity },
+            });
+        }
+
+        await ordersModel.findByIdAndDelete(req.params.id);
 
         return res.status(200).json({ message: "Order deleted" });
     } catch (error) {

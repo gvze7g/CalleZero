@@ -7,7 +7,7 @@ import useAuth from "./useAuth";
 export default function useProductDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { addToCart } = useCart();
+    const { addToCart, cart } = useCart();
     const { isAuthenticated } = useAuth();
 
     const [product, setProduct] = useState(null);
@@ -100,6 +100,12 @@ export default function useProductDetail() {
     const isOutOfStock = stock <= 0;
     const categoryName = product?.categoryId?.name || "Calle Zero";
 
+    const quantityInCart = cart
+        .filter((item) => item.productId === product?._id)
+        .reduce((sum, item) => sum + item.quantity, 0);
+
+    const reachedStockLimit = !isOutOfStock && quantityInCart >= stock;
+
     const handleAddToCart = () => {
         if (isOutOfStock) {
             toast.error("Este producto no tiene stock disponible");
@@ -114,6 +120,11 @@ export default function useProductDetail() {
         if (!isAuthenticated) {
             toast.error("Debes iniciar sesión para agregar productos al carrito");
             navigate("/login");
+            return;
+        }
+
+        if (reachedStockLimit) {
+            toast.error("Ya tienes en tu carrito todo el stock disponible");
             return;
         }
 
@@ -146,7 +157,9 @@ export default function useProductDetail() {
 
     const increaseQuantity = () => {
         setQuantity((prev) => {
-            if (prev >= stock) {
+            const maxAllowed = stock - quantityInCart;
+
+            if (prev >= maxAllowed) {
                 toast.info("No hay más stock disponible");
                 return prev;
             }
@@ -181,5 +194,6 @@ export default function useProductDetail() {
         handleAddToCart,
         handleFavorite,
         handleSizeGuide,
+        reachedStockLimit,
     };
 }

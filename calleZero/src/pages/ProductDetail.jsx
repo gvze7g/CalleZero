@@ -27,6 +27,7 @@ const ProductDetail = () => {
         handleAddToCart,
         handleFavorite,
         handleSizeGuide,
+        reachedStockLimit,
     } = useProductDetail();
 
     if (isLoading) {
@@ -193,7 +194,7 @@ const ProductDetail = () => {
                                 <button
                                     type="button"
                                     onClick={increaseQuantity}
-                                    disabled={isOutOfStock}
+                                    disabled={isOutOfStock || reachedStockLimit}
                                     className="px-3 py-2 transition hover:text-purple-400 disabled:opacity-30"
                                 >
                                     +
@@ -205,10 +206,14 @@ const ProductDetail = () => {
                             <button
                                 type="button"
                                 onClick={handleAddToCart}
-                                disabled={isOutOfStock}
+                                disabled={isOutOfStock || reachedStockLimit}
                                 className="flex-1 rounded-lg bg-purple-500 py-3 font-[Montserrat] font-semibold text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                                {isOutOfStock ? "Sin stock" : "Añadir al carrito"}
+                                {isOutOfStock
+                                    ? "Sin stock"
+                                    : reachedStockLimit
+                                    ? "Ya tienes el máximo en tu carrito"
+                                    : "Añadir al carrito"}
                             </button>
 
                             <button
