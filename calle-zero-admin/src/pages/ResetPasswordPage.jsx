@@ -2,7 +2,7 @@ import { Lock, Eye, EyeOff, ChevronLeft } from "lucide-react";
 import AuthHeader from "../components/auth/AuthHeader";
 import AuthFooter from "../components/auth/AuthFooter";
 import AuthInput from "../components/auth/AuthInput";
-import resetPassword from "../hooks/useResetPassword";
+import useResetPassword from "../hooks/useResetPassword";
 
 const ResetPasswordPage = () => {
     const {
@@ -99,12 +99,7 @@ const ResetPasswordPage = () => {
 
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowPassword((prev) => ({
-                        ...prev,
-                        confirmPassword: !prev.confirmPassword,
-                      }))
-                    }
+                    onClick={() => togglePassword("confirmPassword")}
                     className="absolute right-3 sm:right-4 text-white/40 hover:text-white/60 transition"
                   >
                     {showPassword.confirmPassword ? (
