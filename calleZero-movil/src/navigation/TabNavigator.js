@@ -7,6 +7,7 @@ import SearchScreen from "../screens/shop/SearchScreen";
 import CartScreen from "../screens/shop/CartScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import { colors } from "../theme";
+import { useShop } from "../context/ShopContext";
 
 const Tab = createBottomTabNavigator();
 
@@ -18,6 +19,7 @@ const ICONS = {
 };
 
 function TabIcon({ routeName, focused, color }) {
+  const { cartCount } = useShop();
   const base = ICONS[routeName];
   const name = focused ? base : `${base}-outline`;
   return (
@@ -25,7 +27,7 @@ function TabIcon({ routeName, focused, color }) {
       <Ionicons name={name} size={22} color={color} />
       {routeName === "Carrito" ? (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>2</Text>
+          <Text style={styles.badgeText}>{cartCount}</Text>
         </View>
       ) : null}
     </View>

@@ -15,20 +15,18 @@ import { Ionicons } from "@expo/vector-icons";
 import QtyStepper from "../../components/shop/QtyStepper";
 // CONECTAR API: reemplazar `cartItems` / `cartSummary` por el carrito real
 // (estado local, contexto de carrito, o GET a un endpoint de carrito).
-import { cartItems, cartSummary } from "../../data/shop";
+import { useShop } from "../../context/ShopContext";
 import { colors, radius, spacing } from "../../theme";
 
 const money = (n) => `$${Math.abs(n).toFixed(2)}`;
+const cartSummary = { shipping: 0, discountLabel: "Descuento", discount: 0 };
 
 export default function CartScreen({ navigation }) {
-  const [items, setItems] = useState(cartItems);
+  const { cart: items, changeQuantity } = useShop();
   const [promo, setPromo] = useState("");
 
-  const setQty = (id, qty) =>
-    setItems((list) => list.map((it) => (it.id === id ? { ...it, qty } : it)));
-
-  const removeItem = (id) =>
-    setItems((list) => list.filter((it) => it.id !== id));
+  const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
+  const total = subtotal;
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -45,8 +43,8 @@ export default function CartScreen({ navigation }) {
         keyboardShouldPersistTaps="handled"
       >
         {items.map((item) => (
-          <View key={item.id} style={styles.row}>
-            <Image source={item.image} style={styles.thumb} resizeMode="cover" />
+          <View key={`${item.id}-${item.size}`} style={styles.row}>
+            {item.image ? <Image source={item.image} style={styles.thumb} resizeMode="cover" /> : <View style={styles.thumb} />}
             <View style={styles.info}>
               <View style={styles.infoTop}>
                 <View style={{ flex: 1 }}>
@@ -56,15 +54,15 @@ export default function CartScreen({ navigation }) {
                   </Text>
                   <Text style={styles.size}>Talla: {item.size}</Text>
                 </View>
-                <Pressable hitSlop={8} onPress={() => removeItem(item.id)}>
+                <Pressable hitSlop={8} onPress={() => changeQuantity(item.id, item.size, 0)}>
                   <Ionicons name="close" size={16} color={colors.textFaint} />
                 </Pressable>
               </View>
               <View style={styles.infoBottom}>
                 <QtyStepper
                   size="sm"
-                  value={item.qty}
-                  onChange={(q) => setQty(item.id, q)}
+                  value={item.quantity}
+                  onChange={(q) => changeQuantity(item.id, item.size, q)}
                 />
                 <Text style={styles.price}>{money(item.price)}</Text>
               </View>
@@ -94,7 +92,7 @@ export default function CartScreen({ navigation }) {
         {/* Resumen */}
         <Text style={styles.section}>RESUMEN DEL PEDIDO</Text>
         <View style={styles.summary}>
-          <SummaryLine label="Subtotal" value={money(cartSummary.subtotal)} />
+          <SummaryLine label="Subtotal" value={money(subtotal)} />
           <SummaryLine label="Envío estándar" value={money(cartSummary.shipping)} />
           <SummaryLine
             label={cartSummary.discountLabel}
@@ -107,9 +105,9 @@ export default function CartScreen({ navigation }) {
       <View style={styles.footer}>
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>TOTAL</Text>
-          <Text style={styles.totalValue}>{money(cartSummary.total)}</Text>
+          <Text style={styles.totalValue}>{money(total)}</Text>
         </View>
-        <Pressable style={styles.pay} onPress={() => navigation.navigate("Checkout")}>
+        <Pressable disabled={!items.length} style={[styles.pay, !items.length && { opacity: 0.5 }]} onPress={() => navigation.navigate("Checkout")}>
           <Text style={styles.payText}>Pagar ahora</Text>
           <Ionicons name="arrow-forward" size={18} color="#fff" />
         </Pressable>

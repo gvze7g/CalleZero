@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react";
+import * as ImagePicker from "expo-image-picker";
 import {
   Pressable,
+  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -12,9 +14,9 @@ import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useAuth } from "../context/AuthContext";
+import { useShop } from "../context/ShopContext";
 // profileStats es mock: el backend no expone #pedidos / #reseñas / puntos.
 // CONECTAR API: cuando exista un endpoint de estadisticas, reemplazar aqui.
-import { profileStats } from "../data/shop";
 import { colors, radius, spacing } from "../theme";
 
 const ACCOUNT_ROWS = [
@@ -38,6 +40,7 @@ const ACCOUNT_ROWS = [
 
 export default function ProfileScreen({ navigation }) {
   const { user, signOut, refreshUser } = useAuth();
+  const { profilePhoto, saveProfilePhoto, paymentMethods } = useShop();
   const [loggingOut, setLoggingOut] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -63,6 +66,12 @@ export default function ProfileScreen({ navigation }) {
     } finally {
       setLoggingOut(false);
     }
+  };
+  const pickPhoto = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 0.7 });
+    if (!result.canceled) saveProfilePhoto(result.assets[0].uri);
   };
 
   const shopRows = [
@@ -107,8 +116,8 @@ export default function ProfileScreen({ navigation }) {
       >
         {/* Tarjeta de usuario (datos reales del backend) */}
         <View style={styles.userCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
+          <Pressable style={styles.avatar} onPress={pickPhoto}>
+            {profilePhoto ? <Image source={{ uri: profilePhoto }} style={styles.avatarImage} /> : <Text style={styles.avatarText}>{initials}</Text>}
             <View style={styles.avatarCheck}>
               <Ionicons
                 name={user?.isVerified ? "checkmark" : "alert"}
@@ -116,7 +125,7 @@ export default function ProfileScreen({ navigation }) {
                 color="#fff"
               />
             </View>
-          </View>
+          </Pressable>
 
           <Text style={styles.name}>{user?.fullName || "Miembro Zero"}</Text>
           <Text style={styles.email}>{user?.email || ""}</Text>
@@ -136,19 +145,6 @@ export default function ProfileScreen({ navigation }) {
           </Pressable>
         </View>
 
-        {/* Stats (mock) */}
-        <View style={styles.stats}>
-          {profileStats.map((s, i) => (
-            <View
-              key={s.id}
-              style={[styles.stat, i < profileStats.length - 1 && styles.statDivider]}
-            >
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
-            </View>
-          ))}
-        </View>
-
         {/* Detalles de la cuenta */}
         <Text style={styles.section}>DETALLES DE LA CUENTA</Text>
         <View style={styles.group}>
@@ -158,9 +154,7 @@ export default function ProfileScreen({ navigation }) {
               row={row}
               last={i === ACCOUNT_ROWS.length - 1}
               onPress={
-                row.action === "edit"
-                  ? () => navigation.navigate("EditProfile")
-                  : undefined
+                row.action === "edit" ? () => navigation.navigate("EditProfile") : row.icon === "card-outline" ? () => navigation.navigate("PaymentMethods") : undefined
               }
             />
           ))}
@@ -240,6 +234,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   avatarText: { color: "#fff", fontSize: 22, fontWeight: "800" },
+  avatarImage: { width: 72, height: 72, borderRadius: 36 },
   avatarCheck: {
     position: "absolute",
     right: -2,

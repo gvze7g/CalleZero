@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -10,15 +10,20 @@ import TrendingTile from "../../components/shop/TrendingTile";
 import ProductCardLarge from "../../components/shop/ProductCardLarge";
 // CONECTAR API: `trending` -> GET /api/categories ; `staffPicks` -> GET /api/product ;
 // `recentSearches` normalmente es estado local guardado en el dispositivo.
-import { recentSearches, trending, staffPicks } from "../../data/shop";
+import { trending } from "../../data/shop";
+import { shopApi, productView } from "../../api/shop";
+import { useShop } from "../../context/ShopContext";
 import { colors, radius, spacing } from "../../theme";
 
 export default function SearchScreen({ navigation }) {
   const [query, setQuery] = useState("");
-  const [recents, setRecents] = useState(recentSearches);
+  const { recentSearches: recents, addRecentSearch, removeRecentSearch } = useShop();
+  const [products, setProducts] = useState([]);
+  useEffect(() => { shopApi.products().then(data => setProducts(data.filter(p => p.isActive !== false).map(productView))).catch(() => {}); }, []);
+  const results = useMemo(() => products.filter(p => `${p.name} ${p.description || ""} ${p.categoryId?.name || ""}`.toLowerCase().includes(query.toLowerCase())), [products, query]);
 
   const removeRecent = (term) =>
-    setRecents((list) => list.filter((t) => t !== term));
+    removeRecentSearch(term);
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -44,7 +49,9 @@ export default function SearchScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <SearchBar value={query} onChangeText={setQuery} />
+        <SearchBar value={query} onChangeText={setQuery} onSubmitEditing={() => addRecentSearch(query)} />
+
+        {query.trim() ? <View style={styles.section}><SectionHeader title={`RESULTADOS (${results.length})`} /><View style={styles.hRow}>{results.map(p => <ProductCardLarge key={p.id} product={p} onPress={() => navigation.navigate("ProductDetail", { product: p })} />)}</View></View> : null}
 
         {/* Busquedas recientes */}
         {recents.length > 0 && (
@@ -52,12 +59,12 @@ export default function SearchScreen({ navigation }) {
             <SectionHeader
               title="BÚSQUEDAS RECIENTES"
               action="Limpiar"
-              onAction={() => setRecents([])}
+              onAction={() => recents.forEach(removeRecentSearch)}
             />
             <View style={styles.recentRow}>
               {recents.map((term) => (
                 <View key={term} style={styles.recentChip}>
-                  <Text style={styles.recentText}>{term}</Text>
+                  <Pressable onPress={() => setQuery(term)}><Text style={styles.recentText}>{term}</Text></Pressable>
                   <Pressable hitSlop={6} onPress={() => removeRecent(term)}>
                     <Ionicons name="close" size={13} color={colors.textMuted} />
                   </Pressable>
@@ -87,8 +94,8 @@ export default function SearchScreen({ navigation }) {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.hRow}
           >
-            {staffPicks.map((p) => (
-              <ProductCardLarge key={p.id} product={p} />
+            {products.slice(0, 4).map((p) => (
+              <ProductCardLarge key={p.id} product={p} onPress={() => navigation.navigate("ProductDetail", { product: p })} />
             ))}
           </ScrollView>
         </View>

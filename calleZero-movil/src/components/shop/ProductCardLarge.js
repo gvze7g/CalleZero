@@ -2,13 +2,13 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, radius } from "../../theme";
 
-export default function ProductCardLarge({ product, onPress }) {
+export default function ProductCardLarge({ product, onPress, onFavorite, favorite }) {
   return (
     <Pressable style={styles.card} onPress={onPress}>
       <View style={styles.imageWrap}>
-        <Image source={product.image} style={styles.image} resizeMode="cover" />
-        <Pressable style={styles.heart} hitSlop={6}>
-          <Ionicons name="heart-outline" size={16} color="#fff" />
+        {product.image ? <Image source={product.image} style={styles.image} resizeMode="cover" /> : <View style={styles.image} />}
+        <Pressable style={styles.heart} hitSlop={6} onPress={onFavorite}>
+          <Ionicons name={favorite ? "heart" : "heart-outline"} size={16} color="#fff" />
         </Pressable>
       </View>
 
@@ -19,7 +19,7 @@ export default function ProductCardLarge({ product, onPress }) {
         {product.name}
       </Text>
       <View style={styles.priceRow}>
-        <Text style={styles.price}>{product.price}</Text>
+        <Text style={styles.price}>{product.priceLabel || `$${Number(product.price || 0).toFixed(2)}`}</Text>
         {product.oldPrice ? (
           <Text style={styles.old}>{product.oldPrice}</Text>
         ) : null}

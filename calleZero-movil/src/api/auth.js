@@ -1,4 +1,5 @@
 import { API_BASE } from "../config";
+import { notifyUnauthorized } from "./shop";
 
 /**
  * Wrapper de fetch: agrega JSON headers, el token Bearer (si se pasa) y
@@ -34,6 +35,9 @@ async function request(path, { method = "POST", body, token } = {}) {
   }
 
   if (!response.ok) {
+    if (response.status === 401) {
+      notifyUnauthorized();
+    }
     const err = new Error(data?.message || "Ocurrio un error inesperado");
     err.status = response.status;
     throw err;

@@ -1,18 +1,28 @@
-import { useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 
 import ProductCardGrid from "../../components/shop/ProductCardGrid";
 // CONECTAR API: `products` -> GET /api/product (con query de orden/filtros).
-import { products, sortOptions, activeFilters } from "../../data/shop";
+import { sortOptions } from "../../data/shop";
+import { shopApi, productView } from "../../api/shop";
+import { useShop } from "../../context/ShopContext";
 import { colors, radius, spacing } from "../../theme";
 
 export default function CatalogScreen({ navigation, route }) {
   const title = route.params?.title || "NUEVOS LANZAMIENTOS";
-  const [sort, setSort] = useState(sortOptions[0]);
-  const [filters, setFilters] = useState(activeFilters);
+  const [sortIndex, setSortIndex] = useState(0);
+  const [filters, setFilters] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const { addToCart } = useShop();
+  const sort = sortOptions[sortIndex];
+  const load = useCallback(async () => { try { const data = await shopApi.products(); setProducts(data.filter(p => p.isActive !== false).map(productView)); } finally { setLoading(false); setRefreshing(false); } }, []);
+  useEffect(() => { load(); }, [load]);
+  const filtered = useMemo(() => [...products].filter(p => !filters.length || filters.includes(p.categoryId?.name)).sort((a,b) => sortIndex === 2 ? a.price-b.price : sortIndex === 3 ? b.price-a.price : sortIndex === 1 ? new Date(b.createdAt)-new Date(a.createdAt) : 0), [products, filters, sortIndex]);
 
   const removeFilter = (f) => setFilters((list) => list.filter((x) => x !== f));
 
@@ -40,11 +50,11 @@ export default function CatalogScreen({ navigation, route }) {
 
       {/* Barra de orden / filtros */}
       <View style={styles.filterBar}>
-        <Pressable style={styles.sortBtn}>
+        <Pressable style={styles.sortBtn} onPress={() => setSortIndex((sortIndex + 1) % sortOptions.length)}>
           <Text style={styles.sortText}>Sort: {sort}</Text>
           <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
         </Pressable>
-        <Pressable style={styles.iconPill}>
+        <Pressable style={styles.iconPill} onPress={() => setFilters(filters.length ? [] : [...new Set(products.map(p => p.categoryId?.name).filter(Boolean))])}>
           <Ionicons name="swap-vertical" size={15} color={colors.textMuted} />
         </Pressable>
 
@@ -62,16 +72,19 @@ export default function CatalogScreen({ navigation, route }) {
       </View>
 
       <FlatList
-        data={products}
+        data={filtered}
         keyExtractor={(item) => item.id}
         numColumns={2}
         showsVerticalScrollIndicator={false}
         columnWrapperStyle={styles.column}
         contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.text} />}
+        ListEmptyComponent={loading ? <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} /> : <Text style={styles.empty}>No hay productos que coincidan.</Text>}
         renderItem={({ item }) => (
           <ProductCardGrid
             product={item}
             style={styles.card}
+            onAdd={() => addToCart(item, item.sizes[0])}
             onPress={() => navigation.navigate("ProductDetail", { product: item })}
           />
         )}
@@ -135,6 +148,7 @@ const styles = StyleSheet.create({
   },
   activeChipText: { color: "#fff", fontSize: 11, fontWeight: "700" },
   clear: { color: colors.accent, fontSize: 11, fontWeight: "700" },
+  empty: { color: colors.textMuted, textAlign: "center", marginTop: 40 },
   list: { paddingHorizontal: spacing.lg, paddingBottom: 100 },
   column: { justifyContent: "space-between" },
   card: { width: "48%", marginBottom: spacing.lg },

@@ -18,8 +18,10 @@ import QtyStepper from "../../components/shop/QtyStepper";
 // o por un fetch a  GET /api/product/:id  usando route.params.id
 import { productDetail } from "../../data/shop";
 import { colors, radius, spacing } from "../../theme";
+import { useShop } from "../../context/ShopContext";
 
 export default function ProductDetailScreen({ navigation, route }) {
+  const { addToCart, favorites, toggleFavorite } = useShop();
   // Mezclamos el producto que llega por navegacion (name/price/image) sobre el
   // mock completo, para tener siempre galeria, tallas, colores, etc.
   const passed = route.params?.product || {};
@@ -52,8 +54,8 @@ export default function ProductDetailScreen({ navigation, route }) {
           <Ionicons name="chevron-back" size={20} color="#fff" />
         </Pressable>
         <View style={styles.headerRight}>
-          <Pressable hitSlop={10} style={styles.circleBtn}>
-            <Ionicons name="heart-outline" size={18} color="#fff" />
+          <Pressable hitSlop={10} style={styles.circleBtn} onPress={() => toggleFavorite(product)}>
+            <Ionicons name={favorites.some(f => f.id === product.id) ? "heart" : "heart-outline"} size={18} color="#fff" />
           </Pressable>
           <Pressable hitSlop={10} style={styles.circleBtn}>
             <Ionicons name="share-social-outline" size={18} color="#fff" />
@@ -104,7 +106,7 @@ export default function ProductDetailScreen({ navigation, route }) {
           <Text style={styles.name}>{product.name}</Text>
 
           <View style={styles.priceRow}>
-            <Text style={styles.price}>{product.price}</Text>
+            <Text style={styles.price}>{product.priceLabel || product.price}</Text>
             {product.oldPrice ? <Text style={styles.old}>{product.oldPrice}</Text> : null}
             {product.discount ? (
               <Text style={styles.discount}>{product.discount}</Text>
@@ -166,11 +168,11 @@ export default function ProductDetailScreen({ navigation, route }) {
       <View style={styles.bottomBar}>
         <View>
           <Text style={styles.totalLabel}>TOTAL</Text>
-          <Text style={styles.totalValue}>{product.price}</Text>
+          <Text style={styles.totalValue}>{product.priceLabel || `$${(Number(product.price || 0) * qty).toFixed(2)}`}</Text>
         </View>
         <Pressable
           style={styles.addBtn}
-          onPress={() => navigation.navigate("Tabs", { screen: "Carrito" })}
+          onPress={() => { addToCart(product, size, qty); navigation.navigate("Tabs", { screen: "Carrito" }); }}
         >
           <Ionicons name="bag-add-outline" size={18} color="#fff" />
           <Text style={styles.addText}>AÑADIR AL CARRITO</Text>

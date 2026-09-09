@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { authApi } from "../api/auth";
+import { setUnauthorizedHandler } from "../api/shop";
 import { getItem, setItem, deleteItem } from "../utils/secureStorage";
 
 const TOKEN_KEY = "callezero.token";
@@ -84,6 +85,8 @@ export function AuthProvider({ children }) {
     setToken(null);
     setUser(null);
   }, []);
+
+  useEffect(() => { setUnauthorizedHandler(signOut); return () => setUnauthorizedHandler(null); }, [signOut]);
 
   const value = useMemo(
     () => ({

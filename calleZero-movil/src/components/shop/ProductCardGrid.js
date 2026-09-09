@@ -7,13 +7,13 @@ import { colors, radius } from "../../theme";
  * Tarjeta de producto para grid de 2 columnas (RECOMENDADO / Catalogo).
  * Solo visual.
  */
-export default function ProductCardGrid({ product, onPress, style }) {
+export default function ProductCardGrid({ product, onPress, onAdd, onFavorite, favorite, style }) {
   return (
     <Pressable style={[styles.card, style]} onPress={onPress}>
       <View style={styles.imageWrap}>
-        <Image source={product.image} style={styles.image} resizeMode="cover" />
+        {product.image ? <Image source={product.image} style={styles.image} resizeMode="cover" /> : <View style={styles.image} />}
         {product.tag ? <Tag label={product.tag} style={styles.tag} /> : null}
-        <Pressable style={styles.add} hitSlop={6}>
+        <Pressable style={styles.add} hitSlop={6} onPress={onAdd}>
           <Ionicons name="add" size={18} color="#fff" />
         </Pressable>
       </View>
@@ -25,7 +25,7 @@ export default function ProductCardGrid({ product, onPress, style }) {
         {product.name}
       </Text>
       <View style={styles.priceRow}>
-        <Text style={styles.price}>{product.price}</Text>
+        <Text style={styles.price}>{product.priceLabel || `$${Number(product.price || 0).toFixed(2)}`}</Text>
         {product.oldPrice ? (
           <Text style={styles.old}>{product.oldPrice}</Text>
         ) : null}

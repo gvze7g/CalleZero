@@ -1,13 +1,12 @@
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "./src/context/AuthContext";
+import { ShopProvider } from "./src/context/ShopContext";
 import RootNavigator from "./src/navigation/RootNavigator";
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <RootNavigator />
-      </AuthProvider>
+      <AuthProvider><ShopProvider><RootNavigator /></ShopProvider></AuthProvider>
     </SafeAreaProvider>
   );
 }

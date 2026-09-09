@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Image,
   Pressable,
   ScrollView,
+  ActivityIndicator,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
@@ -20,15 +22,21 @@ import CategoryChip from "../../components/shop/CategoryChip";
 // quedar fijo o venir de un endpoint de banners/promos.
 import {
   heroBanner,
-  hotDrops,
-  homeCategories,
-  products,
 } from "../../data/shop";
+import { shopApi, productView } from "../../api/shop";
+import { useShop } from "../../context/ShopContext";
 import { colors, spacing } from "../../theme";
 
 export default function HomeShopScreen({ navigation }) {
-  const [activeCat, setActiveCat] = useState("hoodies");
-  const recommended = products.slice(0, 6);
+  const [activeCat, setActiveCat] = useState("all");
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const { addToCart } = useShop();
+  const load = useCallback(async () => { try { const [p, c] = await Promise.all([shopApi.products(), shopApi.categories()]); setProducts(p.filter(x => x.isActive !== false && x.stock > 0).map(productView)); setCategories(c); } finally { setLoading(false); setRefreshing(false); } }, []);
+  useEffect(() => { load(); }, [load]);
+  const recommended = products.filter(p => activeCat === "all" || p.categoryId?._id === activeCat).slice(0, 6);
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -70,6 +78,7 @@ export default function HomeShopScreen({ navigation }) {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.text} />}
       >
         <HeroBanner data={heroBanner} />
 
@@ -85,7 +94,7 @@ export default function HomeShopScreen({ navigation }) {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.hRow}
           >
-            {hotDrops.map((item) => (
+            {products.slice(0, 8).map((item) => (
               <ProductCardLarge
                 key={item.id}
                 product={item}
@@ -97,12 +106,13 @@ export default function HomeShopScreen({ navigation }) {
 
         {/* Categorias */}
         <View style={styles.chipsRow}>
-          {homeCategories.map((c) => (
+          <CategoryChip label="Todos" active={activeCat === "all"} onPress={() => setActiveCat("all")} />
+          {categories.map((c) => (
             <CategoryChip
-              key={c.id}
-              label={c.label}
-              active={activeCat === c.id}
-              onPress={() => setActiveCat(c.id)}
+              key={c._id}
+              label={c.name}
+              active={activeCat === c._id}
+              onPress={() => setActiveCat(c._id)}
             />
           ))}
         </View>
@@ -115,10 +125,11 @@ export default function HomeShopScreen({ navigation }) {
             onAction={() => navigation.navigate("Catalog", { title: "RECOMENDADO" })}
           />
           <View style={styles.grid}>
-            {recommended.map((p) => (
+            {loading ? <ActivityIndicator color={colors.primary} /> : recommended.map((p) => (
               <View key={p.id} style={styles.gridItem}>
                 <ProductCardGrid
                   product={p}
+                  onAdd={() => addToCart(p, p.sizes[0])}
                   onPress={() => navigation.navigate("ProductDetail", { product: p })}
                 />
               </View>

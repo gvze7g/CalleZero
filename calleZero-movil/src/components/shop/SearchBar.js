@@ -7,6 +7,7 @@ export default function SearchBar({
   onChangeText,
   placeholder = "Busca sneakers, hoodies, arte...",
   autoFocus = false,
+  onSubmitEditing,
 }) {
   return (
     <View style={styles.wrap}>
@@ -19,6 +20,7 @@ export default function SearchBar({
         placeholderTextColor={colors.textFaint}
         autoFocus={autoFocus}
         returnKeyType="search"
+        onSubmitEditing={onSubmitEditing}
       />
     </View>
   );
