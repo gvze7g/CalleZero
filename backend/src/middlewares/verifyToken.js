@@ -8,7 +8,14 @@ export const verifyToken = (req, res, next) => {
   console.log("COOKIES:", req.cookies);
 
   try {
-    const token = req.cookies.authCookie;
+    // Aceptamos el token desde la cookie (web) o desde el header
+    // Authorization: Bearer <token> (app movil / clientes sin cookies)
+    const authHeader = req.headers.authorization || "";
+    const bearerToken = authHeader.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : null;
+
+    const token = req.cookies.authCookie || bearerToken;
 
     if (!token) {
       console.log("❌ No llegó token");

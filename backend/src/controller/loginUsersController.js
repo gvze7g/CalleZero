@@ -65,7 +65,17 @@ loginUsersController.login = async (req, res) => {
 
     console.log("Login exitoso:", email);
 
-    return res.status(200).json({ message: "Login exitoso" });
+    // Devolvemos el token en el body para clientes sin cookies (app movil)
+    return res.status(200).json({
+      message: "Login exitoso",
+      token,
+      user: {
+        id: userFound._id,
+        fullName: userFound.fullName,
+        email: userFound.email,
+        isVerified: userFound.isVerified,
+      },
+    });
   } catch (error) {
     console.error("Error en login:", error);
     return res.status(500).json({ message: "Error al iniciar sesion" });

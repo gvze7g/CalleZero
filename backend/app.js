@@ -21,8 +21,18 @@ const app = express();
 
 console.log("app.js cargado");
 
+// Origenes permitidos para los frontends web
+const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+
 app.use(cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: (origin, callback) => {
+        // Sin origin => cliente nativo (app movil, Postman, curl): permitido
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin) || origin.startsWith("exp://")) {
+            return callback(null, true);
+        }
+        return callback(null, true);
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]

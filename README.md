@@ -74,6 +74,15 @@ calle-zero/
 │   ├── data/
 │   ├── pages/
 │
+├── calleZero-movil/          # App móvil (React Native + Expo)
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── navigation/
+│   │   └── screens/
+│   └── App.js
+│
 └── README.md
 
 ---
@@ -145,6 +154,17 @@ npm install
 npm run dev  
 
 Servidor: http://localhost:5174  
+
+---
+
+### App móvil (calleZero-movil)
+
+cd calleZero-movil  
+npm install  
+npx expo start  
+
+Se abre en Expo Go (escanea el QR) o en un emulador. El backend debe estar
+corriendo y el teléfono en la misma red Wi-Fi. Ver `calleZero-movil/README.md`.
 
 ---
 

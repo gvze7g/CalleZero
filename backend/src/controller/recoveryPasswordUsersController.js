@@ -71,7 +71,38 @@ recoveryPasswordUsersController.requestCode = async (req, res) => {
   }
 };
 
-// Paso 2: Verificar código y cambiar contraseña
+// Paso 2 (opcional): Solo validar el código, sin cambiar la contraseña.
+// Se usa en la app móvil para separar la pantalla de código de la de nueva contraseña.
+recoveryPasswordUsersController.verifyCodeOnly = async (req, res) => {
+  try {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+      return res.status(400).json({ message: "Faltan campos requeridos" });
+    }
+
+    const user = await UsersModel.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    if (!user.recoveryCode || user.recoveryCode !== String(code).trim()) {
+      return res.status(400).json({ message: "Codigo incorrecto" });
+    }
+
+    if (!user.recoveryCodeExpiry || user.recoveryCodeExpiry < Date.now()) {
+      return res.status(400).json({ message: "Codigo expirado" });
+    }
+
+    return res.status(200).json({ message: "Codigo valido" });
+  } catch (error) {
+    console.error("Error en verifyCodeOnly:", error);
+    return res.status(500).json({ message: "Error al validar el codigo" });
+  }
+};
+
+// Paso 3: Verificar código y cambiar contraseña
 recoveryPasswordUsersController.verifyCode = async (req, res) => {
   try {
     console.log("POST /verify-code recibido");
