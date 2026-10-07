@@ -1,8 +1,11 @@
 import express from "express";
 import controllerUsers from "../controller/UsersController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
+import { isAdmin } from "../middlewares/isAdmin.js";
 
 const router = express.Router();
+
+router.use(verifyToken, isAdmin);
 
 router
   .route("/")
@@ -10,7 +13,7 @@ router
 
 router
   .route("/:id")
-  .put(verifyToken, controllerUsers.updateUsers)
-  .delete(verifyToken, controllerUsers.deleteUsers);
+  .put(controllerUsers.updateUsers)
+  .delete(controllerUsers.deleteUsers);
 
 export default router;

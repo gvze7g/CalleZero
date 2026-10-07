@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import AuthScreen from "../components/AuthScreen";
 import Brand from "../components/Brand";
@@ -6,41 +5,12 @@ import CodeInput from "../components/CodeInput";
 import PrimaryButton from "../components/PrimaryButton";
 import ResendCode from "../components/ResendCode";
 import LinkRow from "../components/LinkRow";
-import { authApi } from "../api/auth";
-import { useAuth } from "../context/AuthContext";
-import { showError, showInfo } from "../utils/alerts";
+import useVerifyEmail from "../hooks/useVerifyEmail";
 import { colors, spacing } from "../theme";
 
 export default function VerifyEmailScreen({ navigation, route }) {
   const email = route.params?.email || "";
-  const { persistSession } = useAuth();
-
-  const [code, setCode] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleVerify = async () => {
-    if (code.length !== 6) {
-      showError("Ingresa el código de 6 dígitos");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const data = await authApi.verifyAccount(email, code);
-      // Cuenta verificada: guardamos sesion y el root pasa a la app.
-      if (data.token) {
-        await persistSession(data.token, data.user || null);
-      } else {
-        showInfo("Tu cuenta fue verificada. Inicia sesión.", "Cuenta verificada", () =>
-          navigation.navigate("Login")
-        );
-      }
-    } catch (err) {
-      showError(err.message || "Código incorrecto o expirado");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { code, setCode, loading, handleVerify, resend } = useVerifyEmail(navigation, email);
 
   return (
     <AuthScreen
@@ -70,7 +40,7 @@ export default function VerifyEmailScreen({ navigation, route }) {
 
         <View style={{ height: spacing.md }} />
 
-        <ResendCode onResend={() => authApi.sendVerificationCode(email)} />
+        <ResendCode onResend={resend} />
       </View>
     </AuthScreen>
   );

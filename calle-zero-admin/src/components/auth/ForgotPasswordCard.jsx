@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Mail, ChevronLeft, Loader } from "lucide-react";
 import { toast } from "sonner";
 import AuthInput from "./AuthInput";
+import { apiFetch } from "../../lib/api.js";
 
 const ForgotPasswordCard = ({ onBackToLogin, onCodeSent }) => {
   const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ const ForgotPasswordCard = ({ onBackToLogin, onCodeSent }) => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:4000/api/admin/recovery/request-code", {
+      const res = await apiFetch("/api/admin/recovery/request-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

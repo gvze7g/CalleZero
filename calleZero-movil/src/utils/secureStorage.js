@@ -1,11 +1,7 @@
 import { Platform } from "react-native";
 import * as SecureStore from "expo-secure-store";
 
-/**
- * Almacenamiento del token.
- * - Nativo (Android / iOS): expo-secure-store (cifrado por el sistema).
- * - Web (solo para previsualizar la UI en el navegador): localStorage.
- */
+// Guarda el token: SecureStore en el celular, localStorage en web
 const isWeb = Platform.OS === "web";
 
 export async function getItem(key) {
@@ -25,7 +21,6 @@ export async function setItem(key, value) {
     }
     await SecureStore.setItemAsync(key, value);
   } catch {
-    // sin persistencia: la sesion durara solo mientras la app este abierta
   }
 }
 
@@ -37,6 +32,5 @@ export async function deleteItem(key) {
     }
     await SecureStore.deleteItemAsync(key);
   } catch {
-    // no-op
   }
 }

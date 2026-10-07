@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [bootstrapping, setBootstrapping] = useState(true);
 
-  // Al arrancar: recuperar token guardado y validar sesion
+  // Recupera la sesion guardada
   useEffect(() => {
     (async () => {
       try {
@@ -45,7 +45,6 @@ export function AuthProvider({ children }) {
     async (email, password) => {
       const data = await authApi.login(email, password);
       await persistSession(data.token, data.user || null);
-      // Aseguramos datos completos del perfil
       if (data.token) {
         try {
           const me = await authApi.getMe(data.token);
@@ -57,7 +56,7 @@ export function AuthProvider({ children }) {
     [persistSession]
   );
 
-  // Recarga los datos del usuario desde el backend (GET /api/users/me)
+  // GET /api/users/me
   const refreshUser = useCallback(async () => {
     if (!token) return null;
     const me = await authApi.getMe(token);
@@ -65,11 +64,10 @@ export function AuthProvider({ children }) {
     return me;
   }, [token]);
 
-  // Actualiza el perfil (PUT /api/users/me) y refresca el estado local
+  // PUT /api/users/me
   const updateProfile = useCallback(
     async (data) => {
       const res = await authApi.updateProfile(token, data);
-      // el backend devuelve { message, user }
       if (res?.user) setUser(res.user);
       else await refreshUser();
       return res;

@@ -1,5 +1,3 @@
-import { useState, useCallback } from "react";
-import * as ImagePicker from "expo-image-picker";
 import {
   Pressable,
   Image,
@@ -13,10 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 
-import { useAuth } from "../context/AuthContext";
-import { useShop } from "../context/ShopContext";
-// profileStats es mock: el backend no expone #pedidos / #reseñas / puntos.
-// CONECTAR API: cuando exista un endpoint de estadisticas, reemplazar aqui.
+import useProfile from "../hooks/useProfile";
 import { colors, radius, spacing } from "../theme";
 
 const ACCOUNT_ROWS = [
@@ -34,45 +29,13 @@ const ACCOUNT_ROWS = [
   {
     icon: "card-outline",
     label: "Método de pago",
-    hint: "Visa que termina en 4242",
+    hint: "",
   },
 ];
 
 export default function ProfileScreen({ navigation }) {
-  const { user, signOut, refreshUser } = useAuth();
-  const { profilePhoto, saveProfilePhoto, paymentMethods } = useShop();
-  const [loggingOut, setLoggingOut] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await refreshUser();
-    } catch {}
-    setRefreshing(false);
-  }, [refreshUser]);
-
-  const initials = (user?.fullName || "U")
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  const handleLogout = async () => {
-    setLoggingOut(true);
-    try {
-      await signOut();
-    } finally {
-      setLoggingOut(false);
-    }
-  };
-  const pickPhoto = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 0.7 });
-    if (!result.canceled) saveProfilePhoto(result.assets[0].uri);
-  };
+  const { user, profilePhoto, paymentMethods, initials, loggingOut, refreshing, onRefresh, handleLogout, pickPhoto } =
+    useProfile();
 
   const shopRows = [
     {
@@ -114,7 +77,7 @@ export default function ProfileScreen({ navigation }) {
           />
         }
       >
-        {/* Tarjeta de usuario (datos reales del backend) */}
+        {/* Tarjeta de usuario */}
         <View style={styles.userCard}>
           <Pressable style={styles.avatar} onPress={pickPhoto}>
             {profilePhoto ? <Image source={{ uri: profilePhoto }} style={styles.avatarImage} /> : <Text style={styles.avatarText}>{initials}</Text>}
@@ -151,7 +114,16 @@ export default function ProfileScreen({ navigation }) {
           {ACCOUNT_ROWS.map((row, i) => (
             <Row
               key={row.label}
-              row={row}
+              row={
+                row.icon === "card-outline"
+                  ? {
+                      ...row,
+                      hint: paymentMethods.length
+                        ? `${paymentMethods[0].brand} que termina en ${paymentMethods[0].last4}`
+                        : "Sin tarjetas guardadas",
+                    }
+                  : row
+              }
               last={i === ACCOUNT_ROWS.length - 1}
               onPress={
                 row.action === "edit" ? () => navigation.navigate("EditProfile") : row.icon === "card-outline" ? () => navigation.navigate("PaymentMethods") : undefined

@@ -1,13 +1,10 @@
+import { cookieOptions } from "../Utils/cookieOptions.js";
+
 const logoutController = {};
 
 logoutController.logout = async (req, res) => {
   try {
-    res.clearCookie("authCookie", {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: false,
-      path: "/",
-    });
+    res.clearCookie("authCookie", cookieOptions());
 
     return res.status(200).json({
       message: "Sesión cerrada",

@@ -1,19 +1,11 @@
 import bcryptjs from "bcryptjs";
 import jsonwebtoken from "jsonwebtoken";
-import nodemailer from "nodemailer";
 import userModel from '../models/users.js';
 import { config } from "../config.js";
+import { cookieOptions, AUTH_COOKIE_MAX_AGE } from "../Utils/cookieOptions.js";
+import sendEmail from "../Utils/sendEmail.js";
 
 const registerUserController = {};
-
-// Transporter reutilizable para el envio de correos
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: config.email.user_email,
-    pass: config.email.user_password,
-  },
-});
 
 // Genera un codigo numerico de 6 digitos
 const generateCode = () =>
@@ -21,8 +13,7 @@ const generateCode = () =>
 
 // Envia el codigo de verificacion de cuenta al correo del usuario
 const sendVerificationEmail = async (email, code) => {
-  await transporter.sendMail({
-    from: config.email.user_email,
+  await sendEmail({
     to: email,
     subject: "Verifica tu cuenta - Calle Zero",
     html: `
@@ -40,8 +31,6 @@ const sendVerificationEmail = async (email, code) => {
 // Crea la cuenta (sin verificar) y envia el codigo de verificacion
 registerUserController.register = async (req, res) => {
   try {
-    console.log("POST /register recibido:", req.body);
-
     const { fullName, email, password } = req.body;
 
     if (!fullName || !email || !password) {
@@ -90,10 +79,7 @@ registerUserController.register = async (req, res) => {
     );
 
     // Guardar token en cookie (web)
-    res.cookie("authCookie", token, {
-      httpOnly: true,
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("authCookie", token, cookieOptions(AUTH_COOKIE_MAX_AGE));
 
     return res.status(201).json({
       message: "Cuenta creada. Revisa tu correo para verificarla.",
@@ -187,10 +173,7 @@ registerUserController.verifyEmail = async (req, res) => {
       { expiresIn: "30d" },
     );
 
-    res.cookie("authCookie", token, {
-      httpOnly: true,
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("authCookie", token, cookieOptions(AUTH_COOKIE_MAX_AGE));
 
     return res.status(200).json({
       message: "Cuenta verificada correctamente",

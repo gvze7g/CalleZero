@@ -1,10 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { colors } from "../theme";
 
-/**
- * Titulo de marca en dos palabras, la segunda resaltada en color.
- * Ej: <Brand first="CALLE" second="ZERO" />
- */
+// Titulo de marca, la segunda palabra resaltada
 export default function Brand({ first, second, size = 26 }) {
   return (
     <View style={styles.row}>

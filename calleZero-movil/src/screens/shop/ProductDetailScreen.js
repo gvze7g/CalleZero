@@ -14,30 +14,27 @@ import { Ionicons } from "@expo/vector-icons";
 
 import Tag from "../../components/shop/Tag";
 import QtyStepper from "../../components/shop/QtyStepper";
-// CONECTAR API: reemplazar `productDetail` por el producto recibido por params
-// o por un fetch a  GET /api/product/:id  usando route.params.id
-import { productDetail } from "../../data/shop";
 import { colors, radius, spacing } from "../../theme";
-import { useShop } from "../../context/ShopContext";
+import useProductDetail from "../../hooks/useProductDetail";
 
 export default function ProductDetailScreen({ navigation, route }) {
-  const { addToCart, favorites, toggleFavorite } = useShop();
-  // Mezclamos el producto que llega por navegacion (name/price/image) sobre el
-  // mock completo, para tener siempre galeria, tallas, colores, etc.
-  const passed = route.params?.product || {};
-  const product = {
-    ...productDetail,
-    ...passed,
-    gallery: passed.image
-      ? [passed.image, ...productDetail.gallery]
-      : productDetail.gallery,
-  };
+  const {
+    product,
+    gallery,
+    sizes,
+    stock,
+    outOfStock,
+    size,
+    setSize,
+    qty,
+    changeQty,
+    total,
+    isFavorite,
+    toggleFavorite,
+    addAndGoToCart,
+  } = useProductDetail(navigation, route.params?.product);
   const { width } = useWindowDimensions();
-
   const [page, setPage] = useState(0);
-  const [color, setColor] = useState(product.colors?.[0]?.id);
-  const [size, setSize] = useState(product.defaultSize || product.sizes?.[2]);
-  const [qty, setQty] = useState(1);
 
   const onScroll = (e) => {
     const x = e.nativeEvent.contentOffset.x;
@@ -54,8 +51,8 @@ export default function ProductDetailScreen({ navigation, route }) {
           <Ionicons name="chevron-back" size={20} color="#fff" />
         </Pressable>
         <View style={styles.headerRight}>
-          <Pressable hitSlop={10} style={styles.circleBtn} onPress={() => toggleFavorite(product)}>
-            <Ionicons name={favorites.some(f => f.id === product.id) ? "heart" : "heart-outline"} size={18} color="#fff" />
+          <Pressable hitSlop={10} style={styles.circleBtn} onPress={toggleFavorite}>
+            <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={18} color="#fff" />
           </Pressable>
           <Pressable hitSlop={10} style={styles.circleBtn}>
             <Ionicons name="share-social-outline" size={18} color="#fff" />
@@ -73,34 +70,30 @@ export default function ProductDetailScreen({ navigation, route }) {
             onScroll={onScroll}
             scrollEventThrottle={16}
           >
-            {product.gallery.map((img, i) => (
+            {gallery.map((img, i) => (
               <Image key={i} source={img} style={{ width, height: 420 }} resizeMode="cover" />
             ))}
           </ScrollView>
 
           <View style={styles.dots}>
-            {product.gallery.map((_, i) => (
+            {gallery.map((_, i) => (
               <View key={i} style={[styles.dot, i === page && styles.dotActive]} />
             ))}
           </View>
           <View style={styles.counter}>
             <Text style={styles.counterText}>
-              {String(page + 1).padStart(2, "0")}/{String(product.gallery.length).padStart(2, "0")}
+              {String(page + 1).padStart(2, "0")}/{String(gallery.length).padStart(2, "0")}
             </Text>
           </View>
         </View>
 
         <View style={styles.body}>
-          {/* Tag + rating */}
+          {/* Categoria + stock */}
           <View style={styles.rowBetween}>
-            <Tag label={product.tag} />
-            <View style={styles.rating}>
-              <Ionicons name="star" size={13} color="#F59E0B" />
-              <Text style={styles.ratingText}>
-                {product.rating}{" "}
-                <Text style={styles.ratingMuted}>({product.reviews} Reviews)</Text>
-              </Text>
-            </View>
+            <Tag label={product.brand} />
+            <Text style={styles.ratingText}>
+              {outOfStock ? "AGOTADO" : `${stock} disponibles`}
+            </Text>
           </View>
 
           <Text style={styles.name}>{product.name}</Text>
@@ -113,27 +106,10 @@ export default function ProductDetailScreen({ navigation, route }) {
             ) : null}
           </View>
 
-          {/* Color */}
-          <Text style={styles.label}>SELECCIONA EL COLOR</Text>
-          <View style={styles.swatches}>
-            {product.colors.map((c) => (
-              <Pressable
-                key={c.id}
-                onPress={() => setColor(c.id)}
-                style={[
-                  styles.swatchRing,
-                  color === c.id && { borderColor: colors.primary },
-                ]}
-              >
-                <View style={[styles.swatch, { backgroundColor: c.value }]} />
-              </Pressable>
-            ))}
-          </View>
-
           {/* Tallas */}
           <Text style={styles.label}>TALLAS</Text>
           <View style={styles.sizes}>
-            {product.sizes.map((s) => (
+            {sizes.map((s) => (
               <Pressable
                 key={s}
                 onPress={() => setSize(s)}
@@ -146,11 +122,11 @@ export default function ProductDetailScreen({ navigation, route }) {
 
           {/* Descripcion */}
           <Text style={styles.label}>DESCRIPCIÓN</Text>
-          <Text style={styles.desc}>{product.description}</Text>
+          <Text style={styles.desc}>{product.description || "Sin descripción."}</Text>
 
           {/* Features */}
           <View style={styles.features}>
-            {product.features.map((f) => (
+            {FEATURES.map((f) => (
               <View key={f.label} style={styles.feature}>
                 <Ionicons name={f.icon} size={16} color={colors.accent} />
                 <Text style={styles.featureText}>{f.label}</Text>
@@ -160,7 +136,7 @@ export default function ProductDetailScreen({ navigation, route }) {
 
           {/* Cantidad */}
           <Text style={styles.label}>CANTIDAD</Text>
-          <QtyStepper value={qty} onChange={setQty} />
+          <QtyStepper value={qty} onChange={changeQty} />
         </View>
       </ScrollView>
 
@@ -168,19 +144,27 @@ export default function ProductDetailScreen({ navigation, route }) {
       <View style={styles.bottomBar}>
         <View>
           <Text style={styles.totalLabel}>TOTAL</Text>
-          <Text style={styles.totalValue}>{product.priceLabel || `$${(Number(product.price || 0) * qty).toFixed(2)}`}</Text>
+          <Text style={styles.totalValue}>{`$${total}`}</Text>
         </View>
         <Pressable
-          style={styles.addBtn}
-          onPress={() => { addToCart(product, size, qty); navigation.navigate("Tabs", { screen: "Carrito" }); }}
+          style={[styles.addBtn, outOfStock && { opacity: 0.5 }]}
+          disabled={outOfStock}
+          onPress={addAndGoToCart}
         >
           <Ionicons name="bag-add-outline" size={18} color="#fff" />
-          <Text style={styles.addText}>AÑADIR AL CARRITO</Text>
+          <Text style={styles.addText}>{outOfStock ? "AGOTADO" : "AÑADIR AL CARRITO"}</Text>
         </Pressable>
       </View>
     </SafeAreaView>
   );
 }
+
+// Politicas de la tienda
+const FEATURES = [
+  { icon: "shield-checkmark-outline", label: "AUTENTICIDAD GARANTIZADA" },
+  { icon: "cube-outline", label: "ENVIO A TODO EL PAIS" },
+  { icon: "refresh-outline", label: "DEVOLUCIONES FACILES" },
+];
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },

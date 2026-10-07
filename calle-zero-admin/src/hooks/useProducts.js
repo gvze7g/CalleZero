@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { apiFetch } from "../lib/api.js";
 
 export default function useProducts() {
   const navigate = useNavigate();
@@ -42,8 +43,8 @@ export default function useProducts() {
 
   const loadProducts = async () => {
     try {
-      const res = await fetch(
-        "http://localhost:4000/api/product",
+      const res = await apiFetch(
+        "/api/product",
         { method: "GET" ,
           headers: {
             "Content-Type": "application/json",
@@ -67,8 +68,8 @@ export default function useProducts() {
 
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(
-        `http://localhost:4000/api/product/${id}`,
+      const res = await apiFetch(
+        `/api/product/${id}`,
         {
           method: "DELETE",
           credentials: "include",

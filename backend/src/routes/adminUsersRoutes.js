@@ -1,5 +1,6 @@
 import express from "express";
 import { verifyToken } from "../middlewares/verifyToken.js";
+import { isAdmin } from "../middlewares/isAdmin.js";
 
 import {
   getAllUsers,
@@ -13,7 +14,7 @@ import {
 const router = express.Router();
 
 // Proteger todas las rutas de este router
-router.use(verifyToken);
+router.use(verifyToken, isAdmin);
 
 // GET
 router.get("/", getAllUsers);

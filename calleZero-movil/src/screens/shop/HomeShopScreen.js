@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useState } from "react";
 import {
   Image,
   Pressable,
@@ -18,25 +17,23 @@ import SectionHeader from "../../components/shop/SectionHeader";
 import ProductCardLarge from "../../components/shop/ProductCardLarge";
 import ProductCardGrid from "../../components/shop/ProductCardGrid";
 import CategoryChip from "../../components/shop/CategoryChip";
-// CONECTAR API: `hotDrops` y `products` -> GET /api/product ; `heroBanner` puede
-// quedar fijo o venir de un endpoint de banners/promos.
-import {
-  heroBanner,
-} from "../../data/shop";
-import { shopApi, productView } from "../../api/shop";
-import { useShop } from "../../context/ShopContext";
+import { heroBanner } from "../../data/shop";
+import useHomeShop from "../../hooks/useHomeShop";
 import { colors, spacing } from "../../theme";
 
 export default function HomeShopScreen({ navigation }) {
-  const [activeCat, setActiveCat] = useState("all");
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const { addToCart } = useShop();
-  const load = useCallback(async () => { try { const [p, c] = await Promise.all([shopApi.products(), shopApi.categories()]); setProducts(p.filter(x => x.isActive !== false && x.stock > 0).map(productView)); setCategories(c); } finally { setLoading(false); setRefreshing(false); } }, []);
-  useEffect(() => { load(); }, [load]);
-  const recommended = products.filter(p => activeCat === "all" || p.categoryId?._id === activeCat).slice(0, 6);
+  const {
+    products,
+    categories,
+    recommended,
+    activeCat,
+    setActiveCat,
+    loading,
+    refreshing,
+    refresh,
+    addToCart,
+    cartCount,
+  } = useHomeShop();
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -68,9 +65,11 @@ export default function HomeShopScreen({ navigation }) {
             style={styles.iconBtn}
           >
             <Ionicons name="bag-outline" size={20} color={colors.text} />
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>2</Text>
-            </View>
+            {cartCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{cartCount}</Text>
+              </View>
+            )}
           </Pressable>
         </View>
       </View>
@@ -78,7 +77,7 @@ export default function HomeShopScreen({ navigation }) {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.text} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.text} />}
       >
         <HeroBanner data={heroBanner} />
 

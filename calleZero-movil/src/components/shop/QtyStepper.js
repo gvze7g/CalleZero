@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, radius } from "../../theme";
 
-/** Selector de cantidad (- N +). Solo visual salvo que pases onChange. */
+// Selector de cantidad (- N +)
 export default function QtyStepper({ value = 1, onChange, size = "md" }) {
   const small = size === "sm";
   const dec = () => onChange?.(Math.max(1, value - 1));

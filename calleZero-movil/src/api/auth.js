@@ -1,10 +1,7 @@
 import { API_BASE } from "../config";
 import { notifyUnauthorized } from "./shop";
 
-/**
- * Wrapper de fetch: agrega JSON headers, el token Bearer (si se pasa) y
- * normaliza los errores del backend a un Error con .message y .status.
- */
+// fetch con JSON, token Bearer y errores normalizados
 async function request(path, { method = "POST", body, token } = {}) {
   let response;
   try {
@@ -56,7 +53,6 @@ export const authApi = {
 
   getMe: (token) => request("/users/me", { method: "GET", token }),
 
-  // Actualiza el perfil del usuario autenticado (PUT /api/users/me)
   updateProfile: (token, data) =>
     request("/users/me", { method: "PUT", token, body: data }),
 
@@ -78,23 +74,4 @@ export const authApi = {
 
   resetPassword: (email, code, newPassword) =>
     request("/users/verify-code", { body: { email, code, newPassword } }),
-
-  // -------------------------------------------------------------------------
-  // TIENDA — endpoints listos para que el equipo los use al conectar la API.
-  // El backend ya expone estas rutas (carpeta ../backend/src/routes).
-  // Ejemplo de uso en una pantalla:
-  //   const { token } = useAuth();
-  //   useEffect(() => { authApi.getProducts().then(setProducts); }, []);
-  // -------------------------------------------------------------------------
-  getProducts: () => request("/product", { method: "GET" }),
-
-  getProductById: (id) => request(`/product/${id}`, { method: "GET" }),
-
-  getCategories: () => request("/categories", { method: "GET" }),
-
-  // pedidos del usuario autenticado (requiere token)
-  getOrders: (token) => request("/orders/mine", { method: "GET", token }),
-
-  createOrder: (token, order) =>
-    request("/orders", { method: "POST", token, body: order }),
 };

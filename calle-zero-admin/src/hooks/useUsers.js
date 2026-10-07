@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { apiFetch } from "../lib/api.js";
 
 const useUsers = () => {
   const [users, setUsers] = useState([]);
@@ -37,8 +38,8 @@ const useUsers = () => {
     try {
       setLoading(true);
 
-      const response = await fetch(
-        "http://localhost:4000/api/admin/users",
+      const response = await apiFetch(
+        "/api/admin/users",
         { method: "GET" ,
           headers: {
             "Content-Type": "application/json",
@@ -73,8 +74,8 @@ const useUsers = () => {
 
   const loadStats = async () => {
     try {
-      const response = await fetch(
-        "http://localhost:4000/api/admin/users/stats",
+      const response = await apiFetch(
+        "/api/admin/users/stats",
         {
           credentials: "include",
         }
@@ -165,8 +166,8 @@ const useUsers = () => {
       let response;
 
       if (editingUser) {
-        response = await fetch(
-          `http://localhost:4000/api/admin/users/${editingUser._id}`,
+        response = await apiFetch(
+          `/api/admin/users/${editingUser._id}`,
           {
             method: "PUT",
             headers: {
@@ -181,8 +182,8 @@ const useUsers = () => {
           }
         );
       } else {
-        response = await fetch(
-          "http://localhost:4000/api/admin/users",
+        response = await apiFetch(
+          "/api/admin/users",
           {
             method: "POST",
             headers: {
@@ -224,8 +225,8 @@ const useUsers = () => {
 
   const handleDeleteUser = async (user) => {
     try {
-      const response = await fetch(
-        `http://localhost:4000/api/admin/users/${user._id}`,
+      const response = await apiFetch(
+        `/api/admin/users/${user._id}`,
         {
           method: "DELETE",
           credentials: "include", 

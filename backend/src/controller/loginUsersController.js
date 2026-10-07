@@ -2,13 +2,12 @@ import bcrypt from "bcryptjs";
 import jsonwebtoken from "jsonwebtoken";
 import usersModel from "../models/users.js";
 import { config } from "../config.js";
+import { cookieOptions, AUTH_COOKIE_MAX_AGE } from "../Utils/cookieOptions.js";
 
 const loginUsersController = {};
 
 loginUsersController.login = async (req, res) => {
   try {
-    console.log("POST /login recibido:", req.body);
-
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -58,10 +57,7 @@ loginUsersController.login = async (req, res) => {
     );
 
     // Guardar token en cookie
-    res.cookie("authCookie", token, { 
-      httpOnly: true, 
-      maxAge: 30 * 24 * 60 * 60 * 1000 
-    });
+    res.cookie("authCookie", token, cookieOptions(AUTH_COOKIE_MAX_AGE));
 
     console.log("Login exitoso:", email);
 

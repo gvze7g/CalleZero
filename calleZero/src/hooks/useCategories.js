@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { apiFetch } from "../lib/api.js";
 
 export default function useCategories(limit) {
     const [categories, setCategories] = useState([]);
@@ -12,7 +13,7 @@ export default function useCategories(limit) {
             setLoadError(null);
 
             try {
-                const response = await fetch("http://localhost:4000/api/categories", {
+                const response = await apiFetch("/api/categories", {
                     credentials: "include",
                 });
 

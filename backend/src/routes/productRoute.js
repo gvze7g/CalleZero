@@ -2,6 +2,7 @@ import express from "express";
 import productController from "../controller/productController.js";
 import upload from "../Utils/cloudinaryConfig.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
+import { isAdmin } from "../middlewares/isAdmin.js";
 
 const router = express.Router();
 
@@ -9,8 +10,8 @@ const router = express.Router();
 router.get("/", productController.getAll);
 router.get("/:id", productController.getProductById);
 
-// A partir de aquí, todo exige estar autenticado
-router.use(verifyToken);
+// A partir de aquí, todo exige ser administrador
+router.use(verifyToken, isAdmin);
 
 router.post("/", upload.array("images", 4), productController.InsertProducts);
 

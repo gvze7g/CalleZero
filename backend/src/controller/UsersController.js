@@ -6,7 +6,7 @@ const controllerUsers = {};
 
 controllerUsers.getAll = async (req,res) => {
     try {
-        const users = await modelUsers.find();
+        const users = await modelUsers.find().select("-password");
         return res.status(200).json(users);
     } catch (error) {
         console.log("Error: " + error);

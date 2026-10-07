@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { apiFetch } from "../lib/api.js";
 
 const DAILY_GOAL = 500;
 
@@ -41,9 +42,9 @@ export default function useDashboard() {
 
             try {
                 const [productsRes, ordersRes, usersRes] = await Promise.all([
-                    fetch("http://localhost:4000/api/product", { credentials: "include" }),
-                    fetch("http://localhost:4000/api/orders", { credentials: "include" }),
-                    fetch("http://localhost:4000/api/admin/users/stats", { credentials: "include" }),
+                    apiFetch("/api/product", { credentials: "include" }),
+                    apiFetch("/api/orders", { credentials: "include" }),
+                    apiFetch("/api/admin/users/stats", { credentials: "include" }),
                 ]);
 
                 if (!productsRes.ok || !ordersRes.ok || !usersRes.ok) {

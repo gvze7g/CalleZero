@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -6,48 +5,11 @@ import { Ionicons } from "@expo/vector-icons";
 
 import Field from "../components/Field";
 import PrimaryButton from "../components/PrimaryButton";
-import { useAuth } from "../context/AuthContext";
-import { showError, showInfo } from "../utils/alerts";
+import useEditProfile from "../hooks/useEditProfile";
 import { colors, spacing } from "../theme";
 
-/**
- * Pantalla FUNCIONAL: edita el perfil del usuario real.
- * GET /api/users/me  (ya cargado en el contexto)  ->  PUT /api/users/me
- */
 export default function EditProfileScreen({ navigation }) {
-  const { user, updateProfile } = useAuth();
-
-  const [form, setForm] = useState({
-    fullName: user?.fullName || "",
-    phone: user?.phone || "",
-    location: user?.location || "",
-  });
-  const [saving, setSaving] = useState(false);
-
-  const setField = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
-
-  const handleSave = async () => {
-    const fullName = form.fullName.trim();
-
-    if (fullName.length < 3 || fullName.length > 50) {
-      showError("El nombre debe tener entre 3 y 50 caracteres");
-      return;
-    }
-
-    setSaving(true);
-    try {
-      await updateProfile({
-        fullName,
-        phone: form.phone.trim(),
-        location: form.location.trim(),
-      });
-      showInfo("Perfil actualizado correctamente", "Listo", () => navigation.goBack());
-    } catch (err) {
-      showError(err.message || "No se pudo actualizar el perfil");
-    } finally {
-      setSaving(false);
-    }
-  };
+  const { user, form, setField, saving, handleSave } = useEditProfile(navigation);
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>

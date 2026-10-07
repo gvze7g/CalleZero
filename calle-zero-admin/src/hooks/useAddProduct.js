@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { apiFetch } from "../lib/api.js";
 
 const MAX_IMAGES = 4;
 const MAX_IMAGE_SIZE_MB = 5;
@@ -63,8 +64,8 @@ export default function useAddProduct() {
     useEffect(() => {
         const loadCategories = async () => {
             try {
-                const response = await fetch(
-                    "http://localhost:4000/api/categories",
+                const response = await apiFetch(
+                    "/api/categories",
                     { credentials: "include" }
                 );
 
@@ -263,12 +264,12 @@ export default function useAddProduct() {
 
             const url =
                 mode === "edit"
-                    ? `http://localhost:4000/api/product/${product._id}`
-                    : "http://localhost:4000/api/product";
+                    ? `/api/product/${product._id}`
+                    : "/api/product";
 
             const method = mode === "edit" ? "PUT" : "POST";
 
-            const response = await fetch(url, {
+            const response = await apiFetch(url, {
                 method,
                 credentials: "include",
                 body: productFormData,

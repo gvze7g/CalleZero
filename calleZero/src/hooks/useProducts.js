@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import { apiFetch } from "../lib/api.js";
 
 const DEFAULT_VISIBLE = 12;
 const LOAD_MORE_STEP = 4;
@@ -33,7 +34,7 @@ export default function useProducts() {
             setLoadError(null);
 
             try {
-                const response = await fetch("http://localhost:4000/api/product", {
+                const response = await apiFetch("/api/product", {
                     credentials: "include",
                 });
 

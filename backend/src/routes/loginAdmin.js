@@ -1,26 +1,26 @@
 import express from "express";
 import loginAdminController from "../controller/loginAdminController.js";
 import bcrypt from "bcryptjs";
-import userModel from "../models/users.js"; // ← CAMBIAR AQUÍ
+import userModel from "../models/users.js";
 import jwt from "jsonwebtoken";
 import { config } from "../config.js";
+import { verifyToken, getRequestToken } from "../middlewares/verifyToken.js";
+import { isAdmin } from "../middlewares/isAdmin.js";
 
 const router = express.Router();
 
 router.route("/").post(loginAdminController.login);
 
-// Crear usuario admin
-router.post("/register", async (req, res) => {
+// Crear usuario (solo un administrador autenticado)
+router.post("/register", verifyToken, isAdmin, async (req, res) => {
   try {
-    console.log(" POST /register recibido:", req.body);
-    
     const { email, password, name } = req.body;
 
     if (!email || !password || !name) {
       return res.status(400).json({ message: "Faltan campos" });
     }
 
-    const userExists = await userModel.findOne({ email }); // ← CAMBIAR AQUÍ
+    const userExists = await userModel.findOne({ email });
     if (userExists) {
       console.log(" Usuario ya existe:", email);
       return res.status(400).json({ message: "Usuario ya existe" });
@@ -28,7 +28,7 @@ router.post("/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await userModel.create({ // ← CAMBIAR AQUÍ
+    const newUser = await userModel.create({
       email,
       password: hashedPassword,
       name,
@@ -51,13 +51,18 @@ router.post("/register", async (req, res) => {
 
 router.get("/me", (req, res) => {
   try {
-    const token = req.cookies.authCookie;
+    const token = getRequestToken(req);
 
     if (!token) {
       return res.status(401).json({ authenticated: false });
     }
 
     const decoded = jwt.verify(token, config.JWT.secret);
+
+    // Solo tokens de admin
+    if (decoded.userType !== "admin") {
+      return res.status(403).json({ authenticated: false });
+    }
 
     return res.status(200).json({
       authenticated: true,

@@ -5,6 +5,7 @@ import { Menu, Search, ShoppingCart, X, LogOut, User } from "lucide-react";
 import { toast } from "sonner";
 import useAuth from "../../hooks/useAuth";
 import useCart from "../../hooks/useCart";
+import { apiFetch, clearToken } from "../../lib/api.js";
 
 const Navbar = () => {
     const navigate = useNavigate();
@@ -27,12 +28,13 @@ const Navbar = () => {
 
     const handleLogout = async () => {
         try {
-            const response = await fetch("http://localhost:4000/api/logout", {
+            const response = await apiFetch("/api/logout", {
                 method: "POST",
                 credentials: "include",
             });
 
             if (response.ok) {
+                clearToken();
                 toast.success("Sesión cerrada");
                 setUser(null);
                 setProfileOpen(false);

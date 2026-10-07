@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Image,
   Pressable,
@@ -13,20 +12,14 @@ import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 
 import QtyStepper from "../../components/shop/QtyStepper";
-// CONECTAR API: reemplazar `cartItems` / `cartSummary` por el carrito real
-// (estado local, contexto de carrito, o GET a un endpoint de carrito).
-import { useShop } from "../../context/ShopContext";
+import useCart from "../../hooks/useCart";
 import { colors, radius, spacing } from "../../theme";
 
 const money = (n) => `$${Math.abs(n).toFixed(2)}`;
-const cartSummary = { shipping: 0, discountLabel: "Descuento", discount: 0 };
 
 export default function CartScreen({ navigation }) {
-  const { cart: items, changeQuantity } = useShop();
-  const [promo, setPromo] = useState("");
-
-  const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
-  const total = subtotal;
+  const { items, itemsCount, subtotal, total, promo, setPromo, removeItem, setItemQuantity } =
+    useCart();
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -34,7 +27,7 @@ export default function CartScreen({ navigation }) {
 
       <View style={styles.header}>
         <Text style={styles.headerTitle}>CARRITO</Text>
-        <Text style={styles.count}>{items.length} artículos</Text>
+        <Text style={styles.count}>{itemsCount} artículos</Text>
       </View>
 
       <ScrollView
@@ -54,7 +47,7 @@ export default function CartScreen({ navigation }) {
                   </Text>
                   <Text style={styles.size}>Talla: {item.size}</Text>
                 </View>
-                <Pressable hitSlop={8} onPress={() => changeQuantity(item.id, item.size, 0)}>
+                <Pressable hitSlop={8} onPress={() => removeItem(item)}>
                   <Ionicons name="close" size={16} color={colors.textFaint} />
                 </Pressable>
               </View>
@@ -62,9 +55,9 @@ export default function CartScreen({ navigation }) {
                 <QtyStepper
                   size="sm"
                   value={item.quantity}
-                  onChange={(q) => changeQuantity(item.id, item.size, q)}
+                  onChange={(q) => setItemQuantity(item, q)}
                 />
-                <Text style={styles.price}>{money(item.price)}</Text>
+                <Text style={styles.price}>{money(item.price * item.quantity)}</Text>
               </View>
             </View>
           </View>
@@ -93,12 +86,7 @@ export default function CartScreen({ navigation }) {
         <Text style={styles.section}>RESUMEN DEL PEDIDO</Text>
         <View style={styles.summary}>
           <SummaryLine label="Subtotal" value={money(subtotal)} />
-          <SummaryLine label="Envío estándar" value={money(cartSummary.shipping)} />
-          <SummaryLine
-            label={cartSummary.discountLabel}
-            value={`-${money(cartSummary.discount)}`}
-            accent
-          />
+          <SummaryLine label="Envío estándar" value="Gratis" accent />
         </View>
       </ScrollView>
 

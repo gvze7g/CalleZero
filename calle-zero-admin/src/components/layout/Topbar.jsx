@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Bell, Menu, Search, Package, ShoppingCart, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../../lib/api.js";
 
 const notifications = [
   {
@@ -35,7 +36,7 @@ const Topbar = ({ onOpenSidebar }) => {
 
   const loadUserData = async () => {
     try {
-      const response = await fetch("http://localhost:4000/api/users/me", {
+      const response = await apiFetch("/api/users/me", {
         method: "GET",
         credentials: "include",
         headers: {

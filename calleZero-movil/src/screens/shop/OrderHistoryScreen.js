@@ -7,14 +7,11 @@ import {
   Text,
   View,
 } from "react-native";
-import { useCallback, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 
-// CONECTAR API: reemplazar por GET /api/orders (pedidos del usuario autenticado).
-import { useAuth } from "../../context/AuthContext";
-import { shopApi } from "../../api/shop";
+import useOrderHistory from "../../hooks/useOrderHistory";
 import { colors, radius, spacing } from "../../theme";
 
 const STATUS_COLOR = {
@@ -73,14 +70,7 @@ function OrderCard({ order }) {
 }
 
 export default function OrderHistoryScreen({ navigation }) {
-  const { token } = useAuth();
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const load = useCallback(async () => { try { setOrders(await shopApi.orders(token)); } finally { setLoading(false); setRefreshing(false); } }, [token]);
-  useEffect(() => { load(); }, [load]);
-  const active = orders.filter(o => !["Completado"].includes(o.OrderStatus));
-  const past = orders.filter(o => o.OrderStatus === "Completado");
+  const { active, past, loading, refreshing, refresh } = useOrderHistory();
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <StatusBar style="light" />
@@ -98,11 +88,11 @@ export default function OrderHistoryScreen({ navigation }) {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.text} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.text} />}
       >
         <Text style={styles.section}>EN CURSO</Text>
         {loading ? <Text style={styles.footNote}>Cargando pedidos...</Text> : active.map((o) => (
-          <OrderCard key={o._id} order={{ ...o, id:o._id.slice(-6), total:`$${Number(o.totalAmount).toFixed(2)}`, date:new Date(o.createdAt).toLocaleDateString(), status:o.OrderStatus, statusType:"warn", items:o.items.length, thumbs:[] }} />
+          <OrderCard key={o._id} order={o} />
         ))}
 
         <View style={styles.sectionRow}>
@@ -112,10 +102,10 @@ export default function OrderHistoryScreen({ navigation }) {
           </Pressable>
         </View>
         {past.map((o) => (
-          <OrderCard key={o._id} order={{ ...o, id:o._id.slice(-6), total:`$${Number(o.totalAmount).toFixed(2)}`, date:new Date(o.createdAt).toLocaleDateString(), status:o.OrderStatus, statusType:"ok", items:o.items.length, thumbs:[] }} />
+          <OrderCard key={o._id} order={o} />
         ))}
 
-        <Text style={styles.footNote}>MOSTRANDO TODOS LOS PEDIDOS DE 2023</Text>
+        <Text style={styles.footNote}>MOSTRANDO TODOS TUS PEDIDOS</Text>
         <Pressable style={styles.loadMore}>
           <Text style={styles.loadMoreText}>Cargar pedidos antiguos</Text>
         </Pressable>

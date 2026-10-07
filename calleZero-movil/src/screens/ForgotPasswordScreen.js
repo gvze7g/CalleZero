@@ -1,35 +1,14 @@
-import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import AuthScreen from "../components/AuthScreen";
 import Brand from "../components/Brand";
 import Field from "../components/Field";
 import PrimaryButton from "../components/PrimaryButton";
 import LinkRow from "../components/LinkRow";
-import { authApi } from "../api/auth";
-import { showError } from "../utils/alerts";
+import useForgotPassword from "../hooks/useForgotPassword";
 import { colors, spacing } from "../theme";
 
 export default function ForgotPasswordScreen({ navigation }) {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleSend = async () => {
-    const value = email.trim().toLowerCase();
-    if (!value) {
-      showError("Ingresa tu correo");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await authApi.forgotPassword(value);
-      navigation.navigate("VerifyCode", { email: value });
-    } catch (err) {
-      showError(err.message || "No se pudo enviar el código");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { email, setEmail, loading, handleSend } = useForgotPassword(navigation);
 
   return (
     <AuthScreen

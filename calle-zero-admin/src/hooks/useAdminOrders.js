@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { apiFetch } from "../lib/api.js";
 
 const statusTypeMap = {
     Pendiente: "default",
@@ -36,7 +37,7 @@ export default function useAdminOrders() {
             setLoadError(null);
 
             try {
-                const response = await fetch("http://localhost:4000/api/orders", {
+                const response = await apiFetch("/api/orders", {
                     credentials: "include",
                 });
 
@@ -60,8 +61,8 @@ export default function useAdminOrders() {
 
     const updateStatus = async (orderId, newStatus) => {
         try {
-            const response = await fetch(
-                `http://localhost:4000/api/orders/${orderId}`,
+            const response = await apiFetch(
+                `/api/orders/${orderId}`,
                 {
                     method: "PUT",
                     credentials: "include",

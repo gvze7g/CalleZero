@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { apiFetch } from "../lib/api.js";
 
 export default function useCategories() {
     const [categories, setCategories] = useState([]);
@@ -59,8 +60,8 @@ export default function useCategories() {
         try {
             setIsLoading(true);
 
-            const response = await fetch(
-                "http://localhost:4000/api/categories",
+            const response = await apiFetch(
+                "/api/categories",
                 {
                     credentials: "include",
                 }
@@ -110,8 +111,8 @@ export default function useCategories() {
 
     const handleDeleteCategory = async (category) => {
         try {
-            const response = await fetch(
-                `http://localhost:4000/api/categories/${category._id}`,
+            const response = await apiFetch(
+                `/api/categories/${category._id}`,
                 {
                     method: "DELETE",
                     credentials: "include",
@@ -144,8 +145,8 @@ export default function useCategories() {
 
         try {
             if (editingCategory) {
-                const response = await fetch(
-                    `http://localhost:4000/api/categories/${editingCategory._id}`,
+                const response = await apiFetch(
+                    `/api/categories/${editingCategory._id}`,
                     {
                         method: "PUT",
                         headers: {
@@ -166,8 +167,8 @@ export default function useCategories() {
 
                 toast.success("Categoría actualizada");
             } else {
-                const response = await fetch(
-                    "http://localhost:4000/api/categories",
+                const response = await apiFetch(
+                    "/api/categories",
                     {
                         method: "POST",
                         headers: {

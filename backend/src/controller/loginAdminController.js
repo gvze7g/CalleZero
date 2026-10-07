@@ -4,6 +4,7 @@ import jsonwebtoken from "jsonwebtoken";
 import userModel from "../models/users.js";
 
 import { config } from "../config.js";
+import { cookieOptions, AUTH_COOKIE_MAX_AGE } from "../Utils/cookieOptions.js";
 
 const loginAdminController = {};
 
@@ -55,13 +56,10 @@ loginAdminController.login = async (req, res) => {
       { expiresIn: "30d" }
     );
 
-    res.cookie("authCookie", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: false,
-    });
+    res.cookie("authCookie", token, cookieOptions(AUTH_COOKIE_MAX_AGE));
 
-    return res.status(200).json({ message: "Login exitoso" });
+    // Token para usarlo como Bearer
+    return res.status(200).json({ message: "Login exitoso", token });
   } catch (error) {
     console.log("💥 ERROR en login:", error);
     return res.status(500).json({ message: "Internal server error", error: error.message });

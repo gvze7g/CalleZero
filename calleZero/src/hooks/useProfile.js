@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { apiFetch, clearToken } from "../lib/api.js";
+import useAuth from "./useAuth";
 
 export default function useProfile() {
     const navigate = useNavigate();
+    const { setUser } = useAuth();
 
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -26,8 +29,8 @@ export default function useProfile() {
         try {
             setIsLoading(true);
 
-            const response = await fetch(
-                "http://localhost:4000/api/users/me",
+            const response = await apiFetch(
+                "/api/users/me",
                 {
                     method: "GET",
                     credentials: "include",
@@ -62,8 +65,8 @@ export default function useProfile() {
 
     const loadOrderCount = async () => {
         try {
-            const response = await fetch(
-                "http://localhost:4000/api/orders",
+            const response = await apiFetch(
+                "/api/orders/mine",
                 {
                     credentials: "include",
                 }
@@ -96,8 +99,8 @@ export default function useProfile() {
         setIsSaving(true);
 
         try {
-            const response = await fetch(
-                "http://localhost:4000/api/users/me",
+            const response = await apiFetch(
+                "/api/users/me",
                 {
                     method: "PUT",
                     credentials: "include",
@@ -127,11 +130,13 @@ export default function useProfile() {
 
     const handleLogout = async () => {
         try {
-            await fetch("http://localhost:4000/api/logout", {
+            await apiFetch("/api/logout", {
                 method: "POST",
                 credentials: "include",
             });
 
+            clearToken();
+            setUser(null);
             toast.success("Sesión cerrada");
             navigate("/");
         } catch (error) {

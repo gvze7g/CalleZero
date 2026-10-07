@@ -6,6 +6,7 @@ import SectionCard from "../shared/SectionCard";
 import StatusBadge from "../shared/StatusBadge";
 import UserAvatar from "../shared/UserAvatar";
 import Pagination from "../shared/Pagination";
+import { apiFetch } from "../../lib/api.js";
 
 const ProductsTable = ({ rows = [], onDelete }) => {
   const navigate = useNavigate();
@@ -58,8 +59,8 @@ const ProductsTable = ({ rows = [], onDelete }) => {
         return;
       }
 
-      const res = await fetch(
-        `http://localhost:4000/api/product/${product._id}`,
+      const res = await apiFetch(
+        `/api/product/${product._id}`,
         { method: "DELETE" }
       );
 

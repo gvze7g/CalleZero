@@ -3,6 +3,7 @@ import * as Icons from "lucide-react";
 import { LogOut, X } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo-1.png";
+import { apiFetch, clearToken } from "../../lib/api.js";
 
 const sidebarLinks = [
   {
@@ -48,11 +49,12 @@ const Sidebar = ({ isSidebarOpen, onClose }) => {
 
   const handleLogout = async () => {
   try {
-      await fetch("http://localhost:4000/api/logout", {
+      await apiFetch("/api/logout", {
         method: "POST",
         credentials: "include",
       });
 
+      clearToken();
       navigate("/login");
       onClose();
     } catch (error) {

@@ -3,10 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Tag from "./Tag";
 import { colors, radius } from "../../theme";
 
-/**
- * Tarjeta de producto para grid de 2 columnas (RECOMENDADO / Catalogo).
- * Solo visual.
- */
+// Tarjeta de producto para grid de 2 columnas
 export default function ProductCardGrid({ product, onPress, onAdd, onFavorite, favorite, style }) {
   return (
     <Pressable style={[styles.card, style]} onPress={onPress}>

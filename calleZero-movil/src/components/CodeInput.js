@@ -2,12 +2,7 @@ import { useRef } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { colors, radius } from "../theme";
 
-/**
- * Entrada de codigo de N digitos (por defecto 6) con cajas separadas.
- * Usa un TextInput invisible que captura el texto; las cajas son solo visuales.
- *
- * props: value (string), onChange (fn), length (number), autoFocus (bool)
- */
+// Codigo de 6 digitos en cajas separadas
 export default function CodeInput({ value = "", onChange, length = 6, autoFocus = true }) {
   const inputRef = useRef(null);
   const cells = Array.from({ length }, (_, i) => value[i] || "");

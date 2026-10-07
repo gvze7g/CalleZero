@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { apiFetch } from "../lib/api.js";
 
 const initialForm = {
     fullName: "",
@@ -88,7 +89,7 @@ export default function useCheckout({ cart, total, clearCart }) {
         setIsSubmitting(true);
 
         try {
-            const response = await fetch("http://localhost:4000/api/orders", {
+            const response = await apiFetch("/api/orders", {
                 method: "POST",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import useAuth from "./useAuth";
+import { apiFetch, setToken } from "../lib/api.js";
 
 export default function useLogin() {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ export default function useLogin() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:4000/api/loginUser", {
+      const response = await apiFetch("/api/loginUser", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -67,6 +68,7 @@ export default function useLogin() {
         return;
       }
 
+      setToken(data.token);
       await checkAuth();
 
       toast.success("Inicio de sesión exitoso");
@@ -93,8 +95,8 @@ export default function useLogin() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        "http://localhost:4000/api/users/forgot-password",
+      const response = await apiFetch(
+        "/api/users/forgot-password",
         {
           method: "POST",
           headers: {
@@ -147,8 +149,8 @@ export default function useLogin() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        "http://localhost:4000/api/users/verify-code",
+      const response = await apiFetch(
+        "/api/users/verify-code",
         {
           method: "POST",
           headers: {

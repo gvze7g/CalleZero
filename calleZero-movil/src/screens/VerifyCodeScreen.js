@@ -1,36 +1,16 @@
-import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import AuthScreen from "../components/AuthScreen";
 import Brand from "../components/Brand";
 import CodeInput from "../components/CodeInput";
 import PrimaryButton from "../components/PrimaryButton";
 import ResendCode from "../components/ResendCode";
-import { authApi } from "../api/auth";
-import { showError } from "../utils/alerts";
+import useVerifyCode from "../hooks/useVerifyCode";
 import { colors, spacing } from "../theme";
 
 export default function VerifyCodeScreen({ navigation, route }) {
   const email = route.params?.email || "";
 
-  const [code, setCode] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleVerify = async () => {
-    if (code.length !== 6) {
-      showError("Ingresa el código de 6 dígitos");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await authApi.verifyRecoveryCode(email, code);
-      navigation.navigate("ResetPassword", { email, code });
-    } catch (err) {
-      showError(err.message || "Código incorrecto o expirado");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { code, setCode, loading, handleVerify, resend } = useVerifyCode(navigation, email);
 
   return (
     <AuthScreen
@@ -53,7 +33,7 @@ export default function VerifyCodeScreen({ navigation, route }) {
 
         <View style={{ height: spacing.md }} />
 
-        <ResendCode onResend={() => authApi.forgotPassword(email)} />
+        <ResendCode onResend={resend} />
       </View>
     </AuthScreen>
   );

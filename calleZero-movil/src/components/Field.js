@@ -3,10 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { colors, radius, spacing } from "../theme";
 
-/**
- * Campo de formulario con label en mayusculas, icono a la izquierda y,
- * para contrasenas, boton de mostrar/ocultar.
- */
+// Campo de formulario con icono y mostrar/ocultar contraseña
 export default function Field({
   label,
   icon,

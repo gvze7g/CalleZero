@@ -1,24 +1,16 @@
 import jsonwebtoken from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
-import userModel from "../models/users.js"; // ← CAMBIAR AQUÍ
+import sendEmail from "../Utils/sendEmail.js";
+import userModel from "../models/users.js";
 import { config } from "../config.js";
+import { cookieOptions } from "../Utils/cookieOptions.js";
 
 const recoveryPasswordAdminController = {};
 
 // Función para enviar email
 const sendRecoveryEmail = (email, randomCode) => {
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.USER_EMAIL,
-      pass: process.env.USER_PASSWORD,
-    },
-  });
-
   const mailOptions = {
-    from: process.env.USER_EMAIL,
     to: email,
     subject: "Código de recuperación de contraseña - Calle Zero",
     html: `
@@ -42,10 +34,8 @@ const sendRecoveryEmail = (email, randomCode) => {
     `,
   };
 
-  transporter.sendMail(mailOptions, (error) => {
-    if (error) {
-      console.log("Error enviando email:", error);
-    }
+  sendEmail(mailOptions).catch((error) => {
+    console.log("Error enviando email:", error);
   });
 };
 
@@ -58,7 +48,7 @@ recoveryPasswordAdminController.requestCode = async (req, res) => {
       return res.status(400).json({ success: false, message: "Email requerido" });
     }
 
-    const userFound = await userModel.findOne({ email }); // ← CAMBIAR AQUÍ
+    const userFound = await userModel.findOne({ email });
 
     if (!userFound) {
       return res.status(404).json({ success: false, message: "Usuario no encontrado" });
@@ -70,15 +60,11 @@ recoveryPasswordAdminController.requestCode = async (req, res) => {
     // Guardar código en token (15 minutos)
     const token = jsonwebtoken.sign(
       { email, randomCode, verified: false },
-      process.env.JWT_SECRET || "tu-secret-key",
+      config.JWT.secret,
       { expiresIn: "15m" }
     );
 
-    res.cookie("recoveryCookie", token, { 
-      maxAge: 15 * 60 * 1000,
-      httpOnly: true,
-      secure: false // Cambiar a true en producción con HTTPS
-    });
+    res.cookie("recoveryCookie", token, cookieOptions(15 * 60 * 1000));
 
     // Enviar email
     sendRecoveryEmail(email, randomCode);
@@ -108,7 +94,7 @@ recoveryPasswordAdminController.verifyCode = async (req, res) => {
       return res.status(400).json({ success: false, message: "Token expirado" });
     }
 
-    const decoded = jsonwebtoken.verify(token, process.env.JWT_SECRET || "tu-secret-key");
+    const decoded = jsonwebtoken.verify(token, config.JWT.secret);
 
     if (code.toUpperCase() !== decoded.randomCode) {
       return res.status(400).json({ success: false, message: "Código incorrecto" });
@@ -117,15 +103,11 @@ recoveryPasswordAdminController.verifyCode = async (req, res) => {
     // Crear nuevo token con verified: true
     const newToken = jsonwebtoken.sign(
       { email: decoded.email, verified: true },
-      process.env.JWT_SECRET || "tu-secret-key",
+      config.JWT.secret,
       { expiresIn: "15m" }
     );
 
-    res.cookie("recoveryCookie", newToken, { 
-      maxAge: 15 * 60 * 1000,
-      httpOnly: true,
-      secure: false
-    });
+    res.cookie("recoveryCookie", newToken, cookieOptions(15 * 60 * 1000));
 
     return res.status(200).json({ 
       success: true, 
@@ -160,7 +142,7 @@ recoveryPasswordAdminController.newPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: "Token expirado" });
     }
 
-    const decoded = jsonwebtoken.verify(token, process.env.JWT_SECRET || "tu-secret-key");
+    const decoded = jsonwebtoken.verify(token, config.JWT.secret);
 
     if (!decoded.verified) {
       return res.status(400).json({ success: false, message: "Código no verificado" });
@@ -169,13 +151,13 @@ recoveryPasswordAdminController.newPassword = async (req, res) => {
     // Hashear nueva contraseña
     const passwordHash = await bcrypt.hash(newPassword, 10);
 
-    await userModel.findOneAndUpdate( // ← CAMBIAR AQUÍ
+    await userModel.findOneAndUpdate(
       { email: decoded.email },
       { password: passwordHash },
       { new: true }
     );
 
-    res.clearCookie("recoveryCookie");
+    res.clearCookie("recoveryCookie", cookieOptions());
 
     return res.status(200).json({ 
       success: true, 

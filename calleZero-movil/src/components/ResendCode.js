@@ -2,10 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { colors } from "../theme";
 
-/**
- * Enlace "Reenviar codigo" con cuenta regresiva.
- * onResend: funcion async que reenvia el codigo.
- */
+// Reenviar codigo con cuenta regresiva
 export default function ResendCode({ onResend, seconds = 30 }) {
   const [left, setLeft] = useState(seconds);
   const [busy, setBusy] = useState(false);

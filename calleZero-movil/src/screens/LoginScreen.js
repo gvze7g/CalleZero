@@ -1,36 +1,14 @@
-import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import AuthScreen from "../components/AuthScreen";
 import Brand from "../components/Brand";
 import Field from "../components/Field";
 import PrimaryButton from "../components/PrimaryButton";
 import LinkRow from "../components/LinkRow";
-import { useAuth } from "../context/AuthContext";
-import { showError } from "../utils/alerts";
+import useLogin from "../hooks/useLogin";
 import { colors, spacing } from "../theme";
 
 export default function LoginScreen({ navigation }) {
-  const { signIn } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      showError("Debes completar correo y contraseña");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await signIn(email.trim().toLowerCase(), password);
-      // Al autenticar, el navegador raiz cambia solo a la app.
-    } catch (err) {
-      showError(err.message || "Credenciales incorrectas");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { email, setEmail, password, setPassword, loading, handleLogin } = useLogin();
 
   return (
     <AuthScreen

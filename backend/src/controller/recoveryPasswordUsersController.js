@@ -1,8 +1,7 @@
 import jsonwebtoken from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
-import { config } from "../config.js";
+import sendEmail from "../Utils/sendEmail.js";
 import UsersModel from "../models/users.js";
 
 const recoveryPasswordUsersController = {};
@@ -34,18 +33,8 @@ recoveryPasswordUsersController.requestCode = async (req, res) => {
     userFound.recoveryCodeExpiry = codeExpiry;
     await userFound.save();
 
-    // Configurar nodemailer
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: config.email.user_email,
-        pass: config.email.user_password,
-      },
-    });
-
     // Enviar correo
     const mailOptions = {
-      from: config.email.user_email,
       to: email,
       subject: "Codigo de Recuperacion - Calle Zero",
       html: `
@@ -56,13 +45,13 @@ recoveryPasswordUsersController.requestCode = async (req, res) => {
       `,
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error("Error enviando correo:", error);
-        return res.status(500).json({ message: "Error al enviar codigo" });
-      }
+    try {
+      await sendEmail(mailOptions);
       console.log("Codigo enviado a:", email);
-    });
+    } catch (mailError) {
+      console.error("Error enviando correo:", mailError);
+      return res.status(500).json({ message: "Error al enviar codigo" });
+    }
 
     return res.status(200).json({ message: "Codigo enviado a tu correo" });
   } catch (error) {
@@ -121,12 +110,12 @@ recoveryPasswordUsersController.verifyCode = async (req, res) => {
     }
 
     // Verificar código
-    if (user.recoveryCode !== code) {
+    if (!user.recoveryCode || user.recoveryCode !== String(code).trim()) {
       return res.status(400).json({ message: "Codigo incorrecto" });
     }
 
     // Verificar si el código expiró
-    if (user.recoveryCodeExpiry < Date.now()) {
+    if (!user.recoveryCodeExpiry || user.recoveryCodeExpiry < Date.now()) {
       return res.status(400).json({ message: "Codigo expirado" });
     }
 

@@ -29,6 +29,7 @@ async function request(path, { method = "GET", token, body } = {}) {
 
 export const shopApi = {
   products: () => request("/product"),
+  product: (id) => request(`/product/${id}`),
   categories: () => request("/categories"),
   orders: (token) => request("/orders/mine", { token }),
   createOrder: (token, order) => request("/orders", { method: "POST", token, body: order }),

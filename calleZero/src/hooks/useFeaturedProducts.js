@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { apiFetch } from "../lib/api.js";
 
 export default function useFeaturedProducts(limit = 4) {
     const [products, setProducts] = useState([]);
@@ -12,7 +13,7 @@ export default function useFeaturedProducts(limit = 4) {
             setLoadError(null);
 
             try {
-                const response = await fetch("http://localhost:4000/api/product", {
+                const response = await apiFetch("/api/product", {
                     credentials: "include",
                 });
 

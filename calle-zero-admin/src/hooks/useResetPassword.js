@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { apiFetch } from "../lib/api.js";
 
 export default function useResetPassword() {
   const navigate = useNavigate();
@@ -52,8 +53,8 @@ export default function useResetPassword() {
     setLoading(true);
 
     try {
-      const response = await fetch(
-        "http://localhost:4000/api/admin/recovery/new-password",
+      const response = await apiFetch(
+        "/api/admin/recovery/new-password",
         {
           method: "POST",
           headers: {

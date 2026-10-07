@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import useCart from "./useCart";
 import useAuth from "./useAuth";
+import { apiFetch } from "../lib/api.js";
 
 export default function useProductDetail() {
     const { id } = useParams();
@@ -34,8 +35,8 @@ export default function useProductDetail() {
             setQuantity(1);
 
             try {
-                const response = await fetch(
-                    `http://localhost:4000/api/product/${id}`,
+                const response = await apiFetch(
+                    `/api/product/${id}`,
                     { credentials: "include" }
                 );
 
@@ -65,7 +66,7 @@ export default function useProductDetail() {
             if (!product?.categoryId) return;
 
             try {
-                const response = await fetch("http://localhost:4000/api/product", {
+                const response = await apiFetch("/api/product", {
                     credentials: "include",
                 });
 

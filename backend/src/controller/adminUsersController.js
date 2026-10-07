@@ -1,18 +1,8 @@
 import Users from "../models/users.js";
 import Role from "../models/role.js";
 import bcrypt from "bcryptjs";
-import nodemailer from "nodemailer";
 import crypto from "crypto";
-import { config } from "../config.js";
-
-// Configurar Nodemailer
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: config.email.user_email,
-        pass: config.email.user_password,
-    },
-});
+import sendEmail from "../Utils/sendEmail.js";
 
 // Generar password temporal
 const generateTemporaryPassword = () => {
@@ -158,7 +148,6 @@ export const createUser = async (req, res) => {
 
         // Enviar email con credentials temporales
         const mailOptions = {
-            from: config.email.user_email,
             to: email,
             subject: "Bienvenido a Calle Zero - Credenciales Temporales",
             html: `
@@ -170,10 +159,8 @@ export const createUser = async (req, res) => {
             `,
         };
 
-        transporter.sendMail(mailOptions, (error) => {
-            if (error) {
-                console.log("Error enviando email:", error);
-            }
+        sendEmail(mailOptions).catch((error) => {
+            console.log("Error enviando email:", error);
         });
 
         res.status(201).json({

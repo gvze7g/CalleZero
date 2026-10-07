@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiFetch } from "../lib/api.js";
 
 export default function useAuth() {
   const [loading, setLoading] = useState(true);
@@ -7,8 +8,8 @@ export default function useAuth() {
   useEffect(() => {
     const verifyUser = async () => {
       try {
-        const res = await fetch(
-          "http://localhost:4000/api/loginAdmin/me",
+        const res = await apiFetch(
+          "/api/loginAdmin/me",
           {
             credentials: "include",
           }

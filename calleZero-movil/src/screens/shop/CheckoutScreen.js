@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -11,14 +10,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 
-// CONECTAR API: `checkoutDefaults` puede venir del perfil (GET /api/users/me).
-// El boton "Realizar Pedido" debe hacer POST /api/orders con el carrito real.
-import { checkoutDefaults, paymentMethods, checkoutSummary } from "../../data/shop";
 import { colors, radius, spacing } from "../../theme";
-import { useAuth } from "../../context/AuthContext";
-import { useShop } from "../../context/ShopContext";
-import { shopApi } from "../../api/shop";
-import { showError, showInfo } from "../../utils/alerts";
+import useCheckout, { paymentMethods } from "../../hooks/useCheckout";
 
 const money = (n) => `$${n.toFixed(2)}`;
 
@@ -41,19 +34,8 @@ function LabeledInput({ label, icon, value, onChangeText, keyboardType, style })
 }
 
 export default function CheckoutScreen({ navigation }) {
-  const { token } = useAuth();
-  const { cart, clearCart } = useShop();
-  const [form, setForm] = useState(checkoutDefaults);
-  const [method, setMethod] = useState(paymentMethods[1].id);
-  const setField = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
-  const [placing, setPlacing] = useState(false);
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const placeOrder = async () => {
-    if (!cart.length) return showError("Tu carrito está vacío");
-    if (!form.address.trim() || !form.city.trim() || !form.phone.trim()) return showError("Completa dirección, ciudad y teléfono");
-    setPlacing(true);
-    try { await shopApi.createOrder(token, { items: cart.map(i => ({ productId: i.id, name: i.name, quantity: i.quantity, size: i.size, price: i.price })), PaymentMethod: paymentMethods.find(x => x.id === method)?.label, ShippingAddress: `${form.fullName}, ${form.address}, ${form.city}, ${form.zip}, ${form.phone}` }); clearCart(); showInfo("Tu pedido fue creado correctamente", "Pedido realizado", () => navigation.navigate("OrderHistory")); } catch (e) { showError(e.message); } finally { setPlacing(false); }
-  };
+  const { form, setField, method, setMethod, placing, placeOrder, subtotal, itemsCount } =
+    useCheckout(navigation);
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -133,13 +115,8 @@ export default function CheckoutScreen({ navigation }) {
 
         <Text style={styles.section}>RESUMEN DEL PEDIDO</Text>
         <View style={styles.summary}>
-          <Line label={`Subtotal (${cart.length} artículos)`} value={money(subtotal)} />
-          <Line
-            label="Envío"
-            value={checkoutSummary.shipping === 0 ? "Gratis" : money(checkoutSummary.shipping)}
-            accent={checkoutSummary.shipping === 0}
-          />
-          <Line label="IVA (impuestos)" value={money(checkoutSummary.tax)} />
+          <Line label={`Subtotal (${itemsCount} artículos)`} value={money(subtotal)} />
+          <Line label="Envío" value="Gratis" accent />
           <View style={styles.divider} />
           <Line label="TOTAL" value={money(subtotal)} bold />
         </View>

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ChevronLeft } from "lucide-react";
 import AuthHeader from "../components/auth/AuthHeader";
 import AuthFooter from "../components/auth/AuthFooter";
+import { apiFetch } from "../lib/api.js";
 
 const VerifyCodePage = () => {
   const navigate = useNavigate();
@@ -66,7 +67,7 @@ const VerifyCodePage = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:4000/api/admin/recovery/verify-code", {
+      const res = await apiFetch("/api/admin/recovery/verify-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

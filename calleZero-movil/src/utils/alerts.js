@@ -1,8 +1,6 @@
 import { Alert, Platform } from "react-native";
 
-/**
- * Alertas simples. En web `Alert` de RN no muestra botones, se usa window.alert.
- */
+// Alertas (en web se usa window.alert)
 export function showError(message, title = "Ups") {
   if (Platform.OS === "web") {
     window.alert(`${title}\n\n${message}`);

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { apiFetch } from "../lib/api.js";
 
 export default function useRegister() {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ export default function useRegister() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:4000/api/registerUser", {
+      const response = await apiFetch("/api/registerUser", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

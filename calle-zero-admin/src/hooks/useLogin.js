@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { apiFetch, setToken } from "../lib/api.js";
 
 export default function useAdminLogin() {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ export default function useAdminLogin() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:4000/api/loginAdmin", {
+      const res = await apiFetch("/api/loginAdmin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,6 +49,7 @@ export default function useAdminLogin() {
         return;
       }
 
+      setToken(data.token);
       toast.success("Login exitoso");
 
       setTimeout(() => {

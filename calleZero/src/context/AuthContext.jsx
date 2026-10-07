@@ -1,4 +1,5 @@
 import { createContext, useCallback, useEffect, useState } from "react";
+import { apiFetch, clearToken } from "../lib/api.js";
 
 export const AuthContext = createContext(null);
 
@@ -8,11 +9,12 @@ export const AuthProvider = ({ children }) => {
 
     const checkAuth = useCallback(async () => {
         try {
-            const response = await fetch("http://localhost:4000/api/users/me", {
+            const response = await apiFetch("/api/users/me", {
                 credentials: "include",
             });
 
             if (!response.ok) {
+                if (response.status === 401) clearToken();
                 setUser(null);
                 return;
             }

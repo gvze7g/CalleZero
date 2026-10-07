@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { apiFetch } from "../lib/api.js";
 
 export default function useProfile() {
   const [formData, setFormData] = useState({
@@ -20,8 +21,8 @@ export default function useProfile() {
     try {
       setIsLoading(true);
 
-      const response = await fetch(
-        "http://localhost:4000/api/users/me",
+      const response = await apiFetch(
+        "/api/users/me",
         {
           method: "GET",
           credentials: "include",
@@ -69,8 +70,8 @@ export default function useProfile() {
     try {
       setIsSaving(true);
 
-      const response = await fetch(
-        "http://localhost:4000/api/users/me",
+      const response = await apiFetch(
+        "/api/users/me",
         {
           method: "PUT",
           credentials: "include",

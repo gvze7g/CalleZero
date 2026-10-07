@@ -10,10 +10,7 @@ import { StatusBar } from "expo-status-bar";
 import ScreenHeader from "./ScreenHeader";
 import { colors, spacing } from "../theme";
 
-/**
- * Contenedor comun para las pantallas de autenticacion:
- * fondo negro, header opcional, contenido scrolleable y teclado que no tapa inputs.
- */
+// Contenedor de las pantallas de autenticacion
 export default function AuthScreen({
   title,
   onBack,
