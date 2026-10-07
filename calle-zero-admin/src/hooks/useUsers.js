@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { apiFetch } from "../lib/api.js";
+import { isName, isEmail, MESSAGES } from "../utils/validators.js";
 
 const useUsers = () => {
   const [users, setUsers] = useState([]);
@@ -159,6 +160,16 @@ const useUsers = () => {
 
     if (!formData.role) {
       toast.error("Debes seleccionar un rol");
+      return;
+    }
+
+    if (!isName(formData.fullName)) {
+      toast.error(MESSAGES.name);
+      return;
+    }
+
+    if (!isEmail(formData.email)) {
+      toast.error(MESSAGES.email);
       return;
     }
 

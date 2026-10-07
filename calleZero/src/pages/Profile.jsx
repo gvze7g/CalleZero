@@ -25,6 +25,8 @@ const Profile = () => {
         saveProfile,
         handleLogout,
         getInitials,
+        photo,
+        changePhoto,
     } = useProfile();
 
     if (isLoading) {
@@ -62,15 +64,25 @@ const Profile = () => {
                     <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
                         <div className="flex items-center gap-5">
                             <div className="relative">
-                                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-purple-500 font-[Montserrat] text-3xl font-black text-black">
-                                    {getInitials()}
-                                </div>
-                                <button 
-                                    type="button"
-                                    className="absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-full bg-black text-purple-500 hover:bg-purple-500 hover:text-black transition"
+                                {photo ? (
+                                    <img src={photo} alt="Foto de perfil" className="h-24 w-24 rounded-full object-cover" />
+                                ) : (
+                                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-purple-500 font-[Montserrat] text-3xl font-black text-black">
+                                        {getInitials()}
+                                    </div>
+                                )}
+                                <label
+                                    title="Cambiar foto"
+                                    className="absolute bottom-0 right-0 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-black text-purple-500 hover:bg-purple-500 hover:text-black transition"
                                 >
                                     <Camera size={16} />
-                                </button>
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        className="hidden"
+                                        onChange={(e) => changePhoto(e.target.files?.[0])}
+                                    />
+                                </label>
                             </div>
 
                             <div>
@@ -110,6 +122,7 @@ const Profile = () => {
                                 <input
                                     value={form.fullName}
                                     onChange={(e) => handleChange("fullName", e.target.value)}
+                                    maxLength={50}
                                     disabled={isSaving}
                                     className="h-12 w-full rounded-lg border border-white/10 bg-black px-4 font-[Open_Sans] outline-none focus:border-purple-500 disabled:opacity-50"
                                 />
@@ -135,6 +148,7 @@ const Profile = () => {
                                 <input
                                     value={form.phone}
                                     onChange={(e) => handleChange("phone", e.target.value)}
+                                    maxLength={20}
                                     disabled={isSaving}
                                     placeholder="+503 0000-0000"
                                     className="h-12 w-full rounded-lg border border-white/10 bg-black px-4 font-[Open_Sans] outline-none focus:border-purple-500 disabled:opacity-50"
@@ -149,6 +163,7 @@ const Profile = () => {
                                 <input
                                     value={form.location}
                                     onChange={(e) => handleChange("location", e.target.value)}
+                                    maxLength={120}
                                     disabled={isSaving}
                                     placeholder="Ciudad, Pais"
                                     className="h-12 w-full rounded-lg border border-white/10 bg-black px-4 font-[Open_Sans] outline-none focus:border-purple-500 disabled:opacity-50"

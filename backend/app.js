@@ -14,6 +14,9 @@ import adminUsersRoutes from "./src/routes/adminUsersRoutes.js"
 import recoveryAdminRoutes from "./src/routes/recoveryAdminRoutes.js"
 import recoveryUsersRoutes from "./src/routes/recoveryUserRoutes.js"
 import userProfileRoutes from "./src/routes/userProfile.js"
+import promotionsRoutes from "./src/routes/promotions.js"
+import notificationsRoutes from "./src/routes/notifications.js"
+import contactRoutes from "./src/routes/contact.js"
 import cors from "cors";
 import { config } from "./src/config.js";
 
@@ -60,6 +63,7 @@ app.use([
     "/api/users/forgot-password",
     "/api/users/verify-recovery-code",
     "/api/users/verify-code",
+    "/api/contact",
 ], limiter);
 
 app.use("/api/categories", categoriesRoutes);
@@ -72,6 +76,9 @@ app.use("/api/loginAdmin", loginAdminRoutes);
 app.use("/api/logout", logoutRoutes);
 app.use("/api/users", userProfileRoutes);
 app.use("/api/users", recoveryUsersRoutes);
+app.use("/api/promotions", promotionsRoutes);
+app.use("/api/notifications", notificationsRoutes);
+app.use("/api/contact", contactRoutes);
 app.use("/api/admin/users", adminUsersRoutes);
 app.use("/api/admin/recovery", recoveryAdminRoutes);
 // Al final para no capturar /api/admin/users ni /api/admin/recovery

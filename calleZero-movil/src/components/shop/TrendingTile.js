@@ -3,9 +3,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import Tag from "./Tag";
 import { radius } from "../../theme";
 
-export default function TrendingTile({ item, style }) {
+export default function TrendingTile({ item, style, onPress }) {
   return (
-    <Pressable style={[styles.tile, style]}>
+    <Pressable style={[styles.tile, style]} onPress={onPress}>
       <ImageBackground source={item.image} style={styles.bg} imageStyle={styles.img}>
         <LinearGradient
           colors={["rgba(0,0,0,0.1)", "rgba(0,0,0,0.8)"]}

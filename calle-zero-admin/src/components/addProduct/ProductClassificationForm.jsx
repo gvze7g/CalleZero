@@ -64,8 +64,9 @@ const ProductClassificationForm = ({
                     <input
                         value={formData.sku}
                         onChange={(event) =>
-                            onChange("sku", event.target.value)
+                            onChange("sku", event.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""))
                         }
+                        maxLength={30}
                         className="mt-2 h-[42px] w-full rounded-[8px] border border-white/10 bg-black px-4 font-[Open_Sans] text-white outline-none"
                         placeholder="CZ-001"
                     />

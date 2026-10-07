@@ -3,6 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import useAuth from "./useAuth";
 import { apiFetch, setToken } from "../lib/api.js";
+import { isEmail, isPassword, MESSAGES } from "../utils/validators.js";
+
+// Solo se permite escribir lo valido en cada campo
+const sanitize = (name, value) => {
+  if (name === "fullName") return value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ' ]/g, "").slice(0, 50);
+  if (name === "email") return value.replace(/\s/g, "").slice(0, 100);
+  if (name === "code") return value.replace(/\D/g, "").slice(0, 6);
+  if (typeof value === "string") return value.slice(0, 64);
+  return value;
+};
+
 
 export default function useLogin() {
   const navigate = useNavigate();
@@ -27,14 +38,14 @@ export default function useLogin() {
   const handleChange = (event) => {
     setForm({
       ...form,
-      [event.target.name]: event.target.value,
+      [event.target.name]: sanitize(event.target.name, event.target.value),
     });
   };
 
   const handleForgotChange = (event) => {
     setForgotForm({
       ...forgotForm,
-      [event.target.name]: event.target.value,
+      [event.target.name]: sanitize(event.target.name, event.target.value),
     });
   };
 
@@ -43,6 +54,11 @@ export default function useLogin() {
 
     if (!form.email.trim() || !form.password.trim()) {
       toast.error("Debes completar correo y contraseña");
+      return;
+    }
+
+    if (!isEmail(form.email)) {
+      toast.error(MESSAGES.email);
       return;
     }
 
@@ -65,6 +81,10 @@ export default function useLogin() {
 
       if (!response.ok) {
         toast.error(data.message || "Credenciales incorrectas");
+        // Cuenta sin verificar: ir a verificarla
+        if (data.needsVerification) {
+          navigate("/verify-account", { state: { email: data.email || form.email } });
+        }
         return;
       }
 
@@ -89,6 +109,11 @@ export default function useLogin() {
 
     if (!forgotForm.email.trim()) {
       toast.error("Ingresa tu correo");
+      return;
+    }
+
+    if (!isEmail(forgotForm.email)) {
+      toast.error(MESSAGES.email);
       return;
     }
 
@@ -128,8 +153,8 @@ export default function useLogin() {
   const handleForgotStep2 = async (event) => {
     event.preventDefault();
 
-    if (!forgotForm.code.trim()) {
-      toast.error("Ingresa el codigo");
+    if (!/^\d{6}$/.test(forgotForm.code)) {
+      toast.error("El código debe tener 6 dígitos");
       return;
     }
 
@@ -138,6 +163,11 @@ export default function useLogin() {
       !forgotForm.confirmPassword.trim()
     ) {
       toast.error("Completa las nuevas contraseñas");
+      return;
+    }
+
+    if (!isPassword(forgotForm.newPassword)) {
+      toast.error(MESSAGES.password);
       return;
     }
 

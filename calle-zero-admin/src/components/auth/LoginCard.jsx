@@ -8,6 +8,7 @@ const LoginCard = ({
   password,
   onChange,
   onForgotPassword,
+  onVerifyAccount,
   onLogin,
   loading,
 }) => {
@@ -81,6 +82,14 @@ const LoginCard = ({
             ¿Olvidaste tu contraseña?
           </button>
         </div>
+
+        <button
+          type="button"
+          onClick={onVerifyAccount}
+          className="w-full text-center font-[Open_Sans] text-[13px] text-white/60 transition hover:text-white"
+        >
+          ¿Tu cuenta no está verificada? <span className="font-bold text-[#B56CFF]">Verificar ahora</span>
+        </button>
 
         <button
           type="submit"

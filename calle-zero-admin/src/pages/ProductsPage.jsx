@@ -1,4 +1,5 @@
 import { Download, Plus } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import AdminLayout from "../components/layout/AdminLayout";
 import StatCard from "../components/shared/StatCard";
 import ProductsTable from "../components/products/ProductsTable";
@@ -13,6 +14,14 @@ const ProductsPage = () => {
     handleExport,
   } = useProducts();
 
+  // Filtro del buscador del Topbar (?q=)
+  const [searchParams] = useSearchParams();
+  const query = (searchParams.get("q") || "").toLowerCase();
+  const filteredProducts = query
+    ? products.filter((p) =>
+        `${p.name} ${p.sku || ""} ${p.categoryId?.name || ""}`.toLowerCase().includes(query)
+      )
+    : products;
 
   return (
     <AdminLayout>
@@ -55,7 +64,7 @@ const ProductsPage = () => {
       </section>
 
       <section className="mt-6">
-        <ProductsTable rows={products} onDelete={handleDelete} />
+        <ProductsTable key={query} rows={filteredProducts} onDelete={handleDelete} />
       </section>
     </AdminLayout>
   );

@@ -7,7 +7,6 @@ import SearchBar from "../../components/shop/SearchBar";
 import SectionHeader from "../../components/shop/SectionHeader";
 import TrendingTile from "../../components/shop/TrendingTile";
 import ProductCardLarge from "../../components/shop/ProductCardLarge";
-import { trending } from "../../data/shop";
 import useSearch from "../../hooks/useSearch";
 import { colors, radius, spacing } from "../../theme";
 
@@ -17,6 +16,7 @@ export default function SearchScreen({ navigation }) {
     setQuery,
     products,
     results,
+    categoryTiles,
     recentSearches: recents,
     removeRecentSearch,
     clearRecents,
@@ -37,7 +37,11 @@ export default function SearchScreen({ navigation }) {
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>DESCUBRIR</Text>
-        <Pressable hitSlop={10} style={styles.hIcon}>
+        <Pressable
+          hitSlop={10}
+          style={styles.hIcon}
+          onPress={() => navigation.navigate("Catalog", { title: "FILTRAR PRODUCTOS", openFilters: true })}
+        >
           <Ionicons name="options-outline" size={22} color={colors.text} />
         </Pressable>
       </View>
@@ -49,7 +53,20 @@ export default function SearchScreen({ navigation }) {
       >
         <SearchBar value={query} onChangeText={setQuery} onSubmitEditing={submit} />
 
-        {query.trim() ? <View style={styles.section}><SectionHeader title={`RESULTADOS (${results.length})`} /><View style={styles.hRow}>{results.map(p => <ProductCardLarge key={p.id} product={p} onPress={() => navigation.navigate("ProductDetail", { product: p })} />)}</View></View> : null}
+        {query.trim() ? (
+          <View style={styles.section}>
+            <SectionHeader title={`RESULTADOS (${results.length})`} />
+            {results.length ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hRow}>
+                {results.map((p) => (
+                  <ProductCardLarge key={p.id} product={p} onPress={() => navigation.navigate("ProductDetail", { product: p })} />
+                ))}
+              </ScrollView>
+            ) : (
+              <Text style={styles.noResults}>No encontramos productos para "{query.trim()}".</Text>
+            )}
+          </View>
+        ) : null}
 
         {/* Busquedas recientes */}
         {recents.length > 0 && (
@@ -72,13 +89,20 @@ export default function SearchScreen({ navigation }) {
           </View>
         )}
 
-        {/* Tendencias */}
+        {/* Categorias */}
         <View style={styles.section}>
-          <SectionHeader title="TENDENCIAS" action="Ver Todos" />
+          <SectionHeader
+            title="CATEGORÍAS"
+            action="Ver Todos"
+            onAction={() => navigation.navigate("Catalog", { title: "TODOS LOS PRODUCTOS" })}
+          />
           <View style={styles.grid}>
-            {trending.map((item) => (
+            {categoryTiles.map((item) => (
               <View key={item.id} style={styles.gridItem}>
-                <TrendingTile item={item} />
+                <TrendingTile
+                  item={item}
+                  onPress={() => navigation.navigate("Catalog", { title: item.label, category: item.name })}
+                />
               </View>
             ))}
           </View>
@@ -86,7 +110,11 @@ export default function SearchScreen({ navigation }) {
 
         {/* Selecciones del personal */}
         <View style={styles.section}>
-          <SectionHeader title="SELECCIONES DEL PERSONAL" action="Ver Todos" />
+          <SectionHeader
+            title="SELECCIONES DEL PERSONAL"
+            action="Ver Todos"
+            onAction={() => navigation.navigate("Catalog", { title: "SELECCIONES DEL PERSONAL" })}
+          />
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -133,6 +161,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   recentText: { color: colors.textMuted, fontSize: 12, fontWeight: "600" },
+  noResults: { color: colors.textMuted, fontSize: 13 },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",

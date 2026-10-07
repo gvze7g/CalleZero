@@ -33,7 +33,16 @@ const UsersSchema = new Schema({
         type: Date,
         default: null
     },
-    role: { 
+    addresses: [{
+        label: { type: String, default: "Casa" },
+        fullName: { type: String, default: "" },
+        address: { type: String, required: true },
+        city: { type: String, default: "" },
+        zip: { type: String, default: "" },
+        phone: { type: String, default: "" },
+        isDefault: { type: Boolean, default: false }
+    }],
+    role: {
         type: Schema.Types.ObjectId, 
         ref: "Role"
     },

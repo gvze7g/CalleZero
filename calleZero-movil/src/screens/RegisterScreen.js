@@ -6,6 +6,7 @@ import Field from "../components/Field";
 import PrimaryButton from "../components/PrimaryButton";
 import LinkRow from "../components/LinkRow";
 import useRegister from "../hooks/useRegister";
+import { emailChars, onlyLetters } from "../utils/validators";
 import { colors, radius, spacing } from "../theme";
 
 export default function RegisterScreen({ navigation }) {
@@ -35,7 +36,7 @@ export default function RegisterScreen({ navigation }) {
           label="NOMBRE COMPLETO"
           icon="person-outline"
           value={form.fullName}
-          onChangeText={setField("fullName")}
+          onChangeText={(v) => setField("fullName")(onlyLetters(v))}
           placeholder="Ingresa Tu Nombre"
           autoCapitalize="words"
           textContentType="name"
@@ -45,7 +46,7 @@ export default function RegisterScreen({ navigation }) {
           label="EMAIL ADDRESS"
           icon="mail-outline"
           value={form.email}
-          onChangeText={setField("email")}
+          onChangeText={(v) => setField("email")(emailChars(v))}
           placeholder="tu@ejemplo.com"
           keyboardType="email-address"
           autoComplete="email"

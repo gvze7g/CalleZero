@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { authApi } from "../api/auth";
 import { showError } from "../utils/alerts";
+import { clean, isEmail, MESSAGES } from "../utils/validators";
 
 // Solicita el codigo de recuperacion
 export default function useForgotPassword(navigation) {
@@ -8,11 +9,9 @@ export default function useForgotPassword(navigation) {
   const [loading, setLoading] = useState(false);
 
   const handleSend = async () => {
-    const value = email.trim().toLowerCase();
-    if (!value) {
-      showError("Ingresa tu correo");
-      return;
-    }
+    const value = clean(email).toLowerCase();
+    if (!value) return showError("Ingresa tu correo");
+    if (!isEmail(value)) return showError(MESSAGES.email);
 
     setLoading(true);
     try {

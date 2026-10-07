@@ -89,9 +89,10 @@ const CategoriesPage = () => {
                                 onChange={(event) =>
                                     setFormData((prev) => ({
                                         ...prev,
-                                        name: event.target.value,
+                                        name: event.target.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ' ]/g, ""),
                                     }))
                                 }
+                                maxLength={30}
                                 className="mt-2 h-[42px] w-full rounded-[8px] border border-white/10 bg-black px-4 font-[Open_Sans] text-white outline-none focus:border-white/30"
                                 placeholder="Ej: Sneakers"
                             />
@@ -107,9 +108,10 @@ const CategoriesPage = () => {
                                 onChange={(event) =>
                                     setFormData((prev) => ({
                                         ...prev,
-                                        description: event.target.value,
+                                        description: event.target.value.replace(/[<>{}$\\]/g, ""),
                                     }))
                                 }
+                                maxLength={300}
                                 className="mt-2 h-[110px] w-full resize-none rounded-[8px] border border-white/10 bg-black p-4 font-[Open_Sans] text-white outline-none focus:border-white/30"
                                 placeholder="Describe la categoría..."
                             />

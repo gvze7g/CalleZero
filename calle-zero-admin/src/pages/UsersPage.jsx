@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { Filter, ArrowUpDown, UserPlus, Users } from "lucide-react";
 import AdminLayout from "../components/layout/AdminLayout";
 import StatCard from "../components/shared/StatCard";
@@ -131,9 +132,10 @@ const UsersPage = () => {
                             onChange={(event) =>
                                 setFormData((prev) => ({
                                     ...prev,
-                                    fullName: event.target.value,
+                                    fullName: event.target.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ' ]/g, ""),
                                 }))
                             }
+                            maxLength={50}
                             placeholder="Nombre completo"
                             className="h-[42px] w-full rounded-[8px] border border-white/10 bg-black px-4 font-[Open_Sans] text-white outline-none"
                         />
@@ -143,9 +145,11 @@ const UsersPage = () => {
                             onChange={(event) =>
                                 setFormData((prev) => ({
                                     ...prev,
-                                    email: event.target.value,
+                                    email: event.target.value.replace(/\s/g, ""),
                                 }))
                             }
+                            type="email"
+                            maxLength={100}
                             placeholder="Correo electrónico"
                             className="h-[42px] w-full rounded-[8px] border border-white/10 bg-black px-4 font-[Open_Sans] text-white outline-none"
                         />

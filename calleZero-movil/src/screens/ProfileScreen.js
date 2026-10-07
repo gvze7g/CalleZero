@@ -12,6 +12,7 @@ import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 
 import useProfile from "../hooks/useProfile";
+import useNotifications from "../hooks/useNotifications";
 import { colors, radius, spacing } from "../theme";
 
 const ACCOUNT_ROWS = [
@@ -36,6 +37,7 @@ const ACCOUNT_ROWS = [
 export default function ProfileScreen({ navigation }) {
   const { user, profilePhoto, paymentMethods, initials, loggingOut, refreshing, onRefresh, handleLogout, pickPhoto } =
     useProfile();
+  const { unread } = useNotifications();
 
   const shopRows = [
     {
@@ -53,7 +55,8 @@ export default function ProfileScreen({ navigation }) {
     {
       icon: "notifications-outline",
       label: "Notificaciones",
-      hint: "Ofertas y actualizaciones de pedidos",
+      hint: unread ? `${unread} sin leer` : "Ofertas y actualizaciones de pedidos",
+      onPress: () => navigation.navigate("Notifications"),
     },
   ];
 
@@ -63,7 +66,9 @@ export default function ProfileScreen({ navigation }) {
 
       <View style={styles.header}>
         <Text style={styles.headerTitle}>MI CUENTA</Text>
-        <Ionicons name="settings-outline" size={20} color={colors.text} />
+        <Pressable hitSlop={8} onPress={() => navigation.navigate("EditProfile")}>
+          <Ionicons name="settings-outline" size={20} color={colors.text} />
+        </Pressable>
       </View>
 
       <ScrollView
@@ -126,7 +131,11 @@ export default function ProfileScreen({ navigation }) {
               }
               last={i === ACCOUNT_ROWS.length - 1}
               onPress={
-                row.action === "edit" ? () => navigation.navigate("EditProfile") : row.icon === "card-outline" ? () => navigation.navigate("PaymentMethods") : undefined
+                row.action === "edit"
+                  ? () => navigation.navigate("EditProfile")
+                  : row.icon === "card-outline"
+                    ? () => navigation.navigate("PaymentMethods")
+                    : () => navigation.navigate("Addresses")
               }
             />
           ))}

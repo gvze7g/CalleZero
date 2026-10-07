@@ -18,6 +18,9 @@ const ordersSchema = new Schema(
                 price: { type: Number },
             },
         ],
+        subtotal: { type: Number },
+        discount: { type: Number, default: 0 },
+        promoCode: { type: String, default: "" },
         totalAmount: { type: Number },
         OrderStatus: {
             type: String,

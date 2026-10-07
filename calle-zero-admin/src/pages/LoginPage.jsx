@@ -25,6 +25,7 @@ const LoginPage = () => {
               onChange={handleChange}
               onLogin={handleLogin}
               onForgotPassword={() => navigate("/forgot-password")}
+              onVerifyAccount={() => navigate("/verify-account")}
               loading={loading}
             />
           </div>

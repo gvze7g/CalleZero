@@ -3,6 +3,7 @@ import { Mail, ChevronLeft, Loader } from "lucide-react";
 import { toast } from "sonner";
 import AuthInput from "./AuthInput";
 import { apiFetch } from "../../lib/api.js";
+import { isEmail, MESSAGES } from "../../utils/validators.js";
 
 const ForgotPasswordCard = ({ onBackToLogin, onCodeSent }) => {
   const [email, setEmail] = useState("");
@@ -13,6 +14,11 @@ const ForgotPasswordCard = ({ onBackToLogin, onCodeSent }) => {
 
     if (!email.trim()) {
       toast.error("Ingresa tu correo electrónico");
+      return;
+    }
+
+    if (!isEmail(email)) {
+      toast.error(MESSAGES.email);
       return;
     }
 

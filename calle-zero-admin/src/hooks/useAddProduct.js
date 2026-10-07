@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { apiFetch } from "../lib/api.js";
+import { isSafeText } from "../utils/validators.js";
 
 const MAX_IMAGES = 4;
 const MAX_IMAGE_SIZE_MB = 5;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const AVAILABLE_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+const AVAILABLE_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "28", "30", "32", "34", "36", "Única"];
 
 export default function useAddProduct() {
     const navigate = useNavigate();
@@ -50,7 +51,7 @@ export default function useAddProduct() {
         name: product?.name || "",
         description: product?.description || "",
         categoryId: product?.categoryId?._id || product?.categoryId || "",
-        sku: product?.code || "",
+        sku: product?.sku || "",
         price:
             product?.price !== undefined && product?.price !== null
                 ? String(product.price)
@@ -178,8 +179,16 @@ export default function useAddProduct() {
 
         if (!formData.name.trim()) {
             newErrors.name = "El nombre es obligatorio";
-        } else if (formData.name.trim().length < 3) {
-            newErrors.name = "El nombre debe tener al menos 3 caracteres";
+        } else if (!isSafeText(formData.name, 3, 80)) {
+            newErrors.name = "El nombre debe tener entre 3 y 80 caracteres válidos";
+        }
+
+        if (formData.description && !isSafeText(formData.description, 0, 1000)) {
+            newErrors.description = "La descripción tiene caracteres no permitidos (máx. 1000)";
+        }
+
+        if (formData.sku && !/^[A-Z0-9-]{2,30}$/.test(formData.sku)) {
+            newErrors.sku = "El SKU solo puede tener letras, números y guiones (2 a 30)";
         }
 
         if (!formData.categoryId || !String(formData.categoryId).trim()) {
@@ -194,6 +203,8 @@ export default function useAddProduct() {
                 newErrors.price = "El precio debe ser un número válido";
             } else if (priceNumber <= 0) {
                 newErrors.price = "El precio debe ser mayor a 0";
+            } else if (priceNumber > 10000) {
+                newErrors.price = "El precio no puede ser mayor a $10,000";
             }
         }
 
@@ -205,6 +216,8 @@ export default function useAddProduct() {
                 newErrors.stock = "El stock debe ser un número válido";
             } else if (stockNumber < 0 || !Number.isInteger(stockNumber)) {
                 newErrors.stock = "El stock debe ser un entero mayor o igual a 0";
+            } else if (stockNumber > 100000) {
+                newErrors.stock = "El stock no puede ser mayor a 100,000";
             }
         }
 

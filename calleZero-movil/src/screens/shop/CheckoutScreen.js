@@ -12,10 +12,11 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { colors, radius, spacing } from "../../theme";
 import useCheckout, { paymentMethods } from "../../hooks/useCheckout";
+import { onlyDigits, onlyLetters, phoneChars, safeChars } from "../../utils/validators";
 
 const money = (n) => `$${n.toFixed(2)}`;
 
-function LabeledInput({ label, icon, value, onChangeText, keyboardType, style }) {
+function LabeledInput({ label, icon, value, onChangeText, keyboardType, style, placeholder }) {
   return (
     <View style={[{ marginBottom: spacing.md }, style]}>
       <Text style={styles.label}>{label}</Text>
@@ -25,6 +26,7 @@ function LabeledInput({ label, icon, value, onChangeText, keyboardType, style })
           value={value}
           onChangeText={onChangeText}
           keyboardType={keyboardType}
+          placeholder={placeholder}
           style={styles.input}
           placeholderTextColor={colors.textFaint}
         />
@@ -34,8 +36,25 @@ function LabeledInput({ label, icon, value, onChangeText, keyboardType, style })
 }
 
 export default function CheckoutScreen({ navigation }) {
-  const { form, setField, method, setMethod, placing, placeOrder, subtotal, itemsCount } =
-    useCheckout(navigation);
+  const {
+    form,
+    setField,
+    addresses,
+    selectedAddress,
+    pickAddress,
+    method,
+    setMethod,
+    cards,
+    cardId,
+    setCardId,
+    placing,
+    placeOrder,
+    subtotal,
+    discount,
+    total,
+    promo,
+    itemsCount,
+  } = useCheckout(navigation);
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -54,31 +73,55 @@ export default function CheckoutScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.section}>DETALLES DE ENVÍO</Text>
+        <View style={styles.sectionRow}>
+          <Text style={styles.section}>DETALLES DE ENVÍO</Text>
+          <Pressable hitSlop={8} onPress={() => navigation.navigate("Addresses")}>
+            <Text style={styles.link}>Mis direcciones</Text>
+          </Pressable>
+        </View>
+
+        {addresses.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.addrRow}>
+            {addresses.map((a) => (
+              <Pressable
+                key={a._id}
+                onPress={() => pickAddress(a)}
+                style={[styles.addrChip, selectedAddress === a._id && styles.addrChipActive]}
+              >
+                <Text style={[styles.addrLabel, selectedAddress === a._id && { color: "#fff" }]}>{a.label}</Text>
+                <Text style={styles.addrText} numberOfLines={1}>{a.address}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        )}
 
         <LabeledInput
           label="NOMBRE COMPLETO"
           icon="person-outline"
           value={form.fullName}
-          onChangeText={setField("fullName")}
+          onChangeText={(v) => setField("fullName")(onlyLetters(v))}
+          placeholder="Nombre de quien recibe"
         />
         <LabeledInput
           label="DIRECCIÓN"
           icon="location-outline"
           value={form.address}
-          onChangeText={setField("address")}
+          onChangeText={(v) => setField("address")(safeChars(v, 150))}
+          placeholder="Colonia, calle, número"
         />
         <View style={styles.rowGap}>
           <LabeledInput
             label="CIUDAD"
             value={form.city}
-            onChangeText={setField("city")}
+            onChangeText={(v) => setField("city")(onlyLetters(v))}
+            placeholder="San Salvador"
             style={{ flex: 1 }}
           />
           <LabeledInput
-            label="ZIP-CODE"
+            label="C. POSTAL"
             value={form.zip}
-            onChangeText={setField("zip")}
+            onChangeText={(v) => setField("zip")(onlyDigits(v, 10))}
+            placeholder="Opcional"
             keyboardType="number-pad"
             style={{ width: 110 }}
           />
@@ -87,7 +130,8 @@ export default function CheckoutScreen({ navigation }) {
           label="TELÉFONO"
           icon="call-outline"
           value={form.phone}
-          onChangeText={setField("phone")}
+          onChangeText={(v) => setField("phone")(phoneChars(v))}
+          placeholder="7777-7777"
           keyboardType="phone-pad"
         />
 
@@ -113,12 +157,28 @@ export default function CheckoutScreen({ navigation }) {
           ))}
         </View>
 
+        {method === "card" && (
+          <View style={styles.cards}>
+            {cards.map((c) => (
+              <Pressable key={c.id} onPress={() => setCardId(c.id)} style={[styles.cardRow, cardId === c.id && styles.cardRowActive]}>
+                <Ionicons name={cardId === c.id ? "radio-button-on" : "radio-button-off"} size={18} color={cardId === c.id ? colors.accent : colors.textFaint} />
+                <Text style={styles.cardText}>{c.brand} •••• {c.last4}</Text>
+                <Text style={styles.cardExp}>{c.expiry}</Text>
+              </Pressable>
+            ))}
+            <Pressable onPress={() => navigation.navigate("PaymentMethods")}>
+              <Text style={styles.link}>{cards.length ? "Administrar tarjetas" : "+ Agregar una tarjeta"}</Text>
+            </Pressable>
+          </View>
+        )}
+
         <Text style={styles.section}>RESUMEN DEL PEDIDO</Text>
         <View style={styles.summary}>
           <Line label={`Subtotal (${itemsCount} artículos)`} value={money(subtotal)} />
           <Line label="Envío" value="Gratis" accent />
+          {discount > 0 && <Line label={`Descuento (${promo.code})`} value={`-${money(discount)}`} accent />}
           <View style={styles.divider} />
-          <Line label="TOTAL" value={money(subtotal)} bold />
+          <Line label="TOTAL" value={money(total)} bold />
         </View>
 
         <Text style={styles.fine}>
@@ -134,7 +194,7 @@ export default function CheckoutScreen({ navigation }) {
           onPress={placeOrder}
         >
           <Text style={styles.placeText}>
-            {placing ? "Creando pedido..." : `Realizar Pedido — ${money(subtotal)}`}
+            {placing ? "Creando pedido..." : `Realizar Pedido — ${money(total)}`}
           </Text>
         </Pressable>
       </View>
@@ -160,6 +220,34 @@ function Line({ label, value, accent, bold }) {
 }
 
 const styles = StyleSheet.create({
+  sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  link: { color: colors.accent, fontSize: 12, fontWeight: "700" },
+  addrRow: { gap: 8, paddingBottom: spacing.md },
+  addrChip: {
+    width: 160,
+    padding: 10,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
+  },
+  addrChipActive: { borderColor: colors.primary, backgroundColor: colors.primaryDark },
+  addrLabel: { color: colors.text, fontSize: 12, fontWeight: "800" },
+  addrText: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
+  cards: { gap: 8, marginTop: spacing.md },
+  cardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 12,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
+  },
+  cardRowActive: { borderColor: colors.primary },
+  cardText: { flex: 1, color: colors.text, fontSize: 13, fontWeight: "700" },
+  cardExp: { color: colors.textMuted, fontSize: 11 },
   safe: { flex: 1, backgroundColor: colors.bg },
   header: {
     flexDirection: "row",

@@ -1,7 +1,7 @@
 import { config } from "../config.js";
 
 // Envia correos con la API de Mailjet (HTTP, no SMTP)
-const sendEmail = async ({ to, subject, html }) => {
+const sendEmail = async ({ to, subject, html, replyTo }) => {
   const { apiKey, secretKey, senderEmail, senderName } = config.mailjet;
 
   const response = await fetch("https://api.mailjet.com/v3.1/send", {
@@ -15,6 +15,7 @@ const sendEmail = async ({ to, subject, html }) => {
         {
           From: { Email: senderEmail, Name: senderName },
           To: [{ Email: to }],
+          ...(replyTo ? { ReplyTo: { Email: replyTo } } : {}),
           Subject: subject,
           HTMLPart: html,
         },

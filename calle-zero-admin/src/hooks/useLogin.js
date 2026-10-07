@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { apiFetch, setToken } from "../lib/api.js";
+import { isEmail, MESSAGES } from "../utils/validators.js";
 
 export default function useAdminLogin() {
   const navigate = useNavigate();
@@ -14,15 +15,21 @@ export default function useAdminLogin() {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setForm({
       ...form,
-      [e.target.name]: e.target.value,
+      [name]: name === "email" ? value.replace(/\s/g, "").slice(0, 100) : value.slice(0, 64),
     });
   };
 
   const handleLogin = async () => {
     if (!form.email.trim() || !form.password.trim()) {
       toast.error("Completa todos los campos");
+      return;
+    }
+
+    if (!isEmail(form.email)) {
+      toast.error(MESSAGES.email);
       return;
     }
 
@@ -46,6 +53,10 @@ export default function useAdminLogin() {
       if (!res.ok) {
         toast.error(data.message || "Error al iniciar sesión");
         setLoading(false);
+        // Cuenta sin verificar: ir a verificarla
+        if (data.needsVerification) {
+          navigate("/verify-account", { state: { email: data.email || form.email } });
+        }
         return;
       }
 

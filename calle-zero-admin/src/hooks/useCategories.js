@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { apiFetch } from "../lib/api.js";
+import { isName, isSafeText } from "../utils/validators.js";
 
 export default function useCategories() {
     const [categories, setCategories] = useState([]);
@@ -140,6 +141,14 @@ export default function useCategories() {
             !formData.description.trim()
         ) {
             toast.error("Debes completar nombre y descripción");
+            return;
+        }
+        if (!isName(formData.name, 3, 30)) {
+            toast.error("El nombre solo puede tener letras y espacios (3 a 30 caracteres)");
+            return;
+        }
+        if (!isSafeText(formData.description, 5, 300)) {
+            toast.error("La descripción debe tener entre 5 y 300 caracteres válidos");
             return;
         }
 

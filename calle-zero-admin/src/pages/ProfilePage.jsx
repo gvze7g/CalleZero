@@ -91,8 +91,9 @@ const ProfilePage = () => {
                                 <input
                                     value={formData.fullName}
                                     onChange={(event) =>
-                                        handleChange("fullName", event.target.value)
+                                        handleChange("fullName", event.target.value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ' ]/g, ""))
                                     }
+                                    maxLength={50}
                                     className="mt-2 h-[42px] w-full rounded-[8px] border border-white/10 bg-black px-4 font-[Open_Sans] text-white outline-none focus:border-white/30 transition"
                                     placeholder="Tu nombre completo"
                                     disabled={isSaving}
@@ -120,8 +121,9 @@ const ProfilePage = () => {
                                     <input
                                         value={formData.phone}
                                         onChange={(event) =>
-                                            handleChange("phone", event.target.value)
+                                            handleChange("phone", event.target.value.replace(/[^0-9 +-]/g, ""))
                                         }
+                                        maxLength={20}
                                         className="mt-2 h-[42px] w-full rounded-[8px] border border-white/10 bg-black px-4 font-[Open_Sans] text-white outline-none focus:border-white/30 transition"
                                         placeholder="+503 0000-0000"
                                         disabled={isSaving}
@@ -136,8 +138,9 @@ const ProfilePage = () => {
                                     <input
                                         value={formData.location}
                                         onChange={(event) =>
-                                            handleChange("location", event.target.value)
+                                            handleChange("location", event.target.value.replace(/[<>{}$\\]/g, ""))
                                         }
+                                        maxLength={120}
                                         className="mt-2 h-[42px] w-full rounded-[8px] border border-white/10 bg-black px-4 font-[Open_Sans] text-white outline-none focus:border-white/30 transition"
                                         placeholder="Ciudad, País"
                                         disabled={isSaving}

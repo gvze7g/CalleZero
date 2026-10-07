@@ -19,6 +19,7 @@ import ProductCardGrid from "../../components/shop/ProductCardGrid";
 import CategoryChip from "../../components/shop/CategoryChip";
 import { heroBanner } from "../../data/shop";
 import useHomeShop from "../../hooks/useHomeShop";
+import useNotifications from "../../hooks/useNotifications";
 import { colors, spacing } from "../../theme";
 
 export default function HomeShopScreen({ navigation }) {
@@ -34,6 +35,7 @@ export default function HomeShopScreen({ navigation }) {
     addToCart,
     cartCount,
   } = useHomeShop();
+  const { unread } = useNotifications();
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -56,8 +58,13 @@ export default function HomeShopScreen({ navigation }) {
           >
             <Ionicons name="search" size={20} color={colors.text} />
           </Pressable>
-          <Pressable hitSlop={8} style={styles.iconBtn}>
+          <Pressable hitSlop={8} onPress={() => navigation.navigate("Notifications")} style={styles.iconBtn}>
             <Ionicons name="notifications-outline" size={20} color={colors.text} />
+            {unread > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unread > 9 ? "9+" : unread}</Text>
+              </View>
+            )}
           </Pressable>
           <Pressable
             hitSlop={8}
@@ -79,7 +86,7 @@ export default function HomeShopScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.text} />}
       >
-        <HeroBanner data={heroBanner} />
+        <HeroBanner data={heroBanner} onPress={() => navigation.navigate("Catalog", { title: "TODOS LOS PRODUCTOS" })} />
 
         {/* HOT DROPS */}
         <View style={styles.section}>
@@ -121,7 +128,7 @@ export default function HomeShopScreen({ navigation }) {
           <SectionHeader
             title="RECOMENDADO"
             action="Filtrar"
-            onAction={() => navigation.navigate("Catalog", { title: "RECOMENDADO" })}
+            onAction={() => navigation.navigate("Catalog", { title: "RECOMENDADO", openFilters: true })}
           />
           <View style={styles.grid}>
             {loading ? <ActivityIndicator color={colors.primary} /> : recommended.map((p) => (
@@ -138,7 +145,7 @@ export default function HomeShopScreen({ navigation }) {
       </ScrollView>
 
       {/* FAB */}
-      <Pressable style={styles.fab}>
+      <Pressable style={styles.fab} onPress={() => navigation.navigate("Catalog", { title: "TODOS LOS PRODUCTOS" })}>
         <Ionicons name="add" size={26} color="#fff" />
       </Pressable>
     </SafeAreaView>

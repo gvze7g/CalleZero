@@ -5,6 +5,7 @@ import Field from "../components/Field";
 import PrimaryButton from "../components/PrimaryButton";
 import LinkRow from "../components/LinkRow";
 import useForgotPassword from "../hooks/useForgotPassword";
+import { emailChars } from "../utils/validators";
 import { colors, spacing } from "../theme";
 
 export default function ForgotPasswordScreen({ navigation }) {
@@ -34,7 +35,7 @@ export default function ForgotPasswordScreen({ navigation }) {
           label="CORREO ELECTRONICO"
           icon="mail-outline"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(v) => setEmail(emailChars(v))}
           placeholder="nombre@callezero.com"
           keyboardType="email-address"
           autoComplete="email"

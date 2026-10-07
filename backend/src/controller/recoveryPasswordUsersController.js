@@ -1,24 +1,24 @@
-import jsonwebtoken from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
 import sendEmail from "../Utils/sendEmail.js";
 import UsersModel from "../models/users.js";
+import { isEmail, isCode, isPassword, emailQuery, MESSAGES } from "../Utils/validators.js";
 
 const recoveryPasswordUsersController = {};
 
 // Paso 1: Enviar código de recuperación
 recoveryPasswordUsersController.requestCode = async (req, res) => {
   try {
-    console.log("POST /forgot-password recibido");
-
     const { email } = req.body;
 
     if (!email) {
       return res.status(400).json({ message: "Correo requerido" });
     }
+    if (!isEmail(email)) {
+      return res.status(400).json({ message: MESSAGES.email });
+    }
 
     // Validar que el correo exista
-    const userFound = await UsersModel.findOne({ email });
+    const userFound = await UsersModel.findOne(emailQuery(email));
 
     if (!userFound) {
       return res.status(404).json({ message: "Correo no encontrado" });
@@ -35,7 +35,7 @@ recoveryPasswordUsersController.requestCode = async (req, res) => {
 
     // Enviar correo
     const mailOptions = {
-      to: email,
+      to: userFound.email,
       subject: "Codigo de Recuperacion - Calle Zero",
       html: `
         <h2>Recuperar Contraseña</h2>
@@ -60,8 +60,7 @@ recoveryPasswordUsersController.requestCode = async (req, res) => {
   }
 };
 
-// Paso 2 (opcional): Solo validar el código, sin cambiar la contraseña.
-// Se usa en la app móvil para separar la pantalla de código de la de nueva contraseña.
+// Paso 2: solo validar el código
 recoveryPasswordUsersController.verifyCodeOnly = async (req, res) => {
   try {
     const { email, code } = req.body;
@@ -69,8 +68,10 @@ recoveryPasswordUsersController.verifyCodeOnly = async (req, res) => {
     if (!email || !code) {
       return res.status(400).json({ message: "Faltan campos requeridos" });
     }
+    if (!isEmail(email)) return res.status(400).json({ message: MESSAGES.email });
+    if (!isCode(code)) return res.status(400).json({ message: MESSAGES.code });
 
-    const user = await UsersModel.findOne({ email });
+    const user = await UsersModel.findOne(emailQuery(email));
 
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
@@ -94,16 +95,17 @@ recoveryPasswordUsersController.verifyCodeOnly = async (req, res) => {
 // Paso 3: Verificar código y cambiar contraseña
 recoveryPasswordUsersController.verifyCode = async (req, res) => {
   try {
-    console.log("POST /verify-code recibido");
-
     const { email, code, newPassword } = req.body;
 
     if (!email || !code || !newPassword) {
       return res.status(400).json({ message: "Faltan campos requeridos" });
     }
+    if (!isEmail(email)) return res.status(400).json({ message: MESSAGES.email });
+    if (!isCode(code)) return res.status(400).json({ message: MESSAGES.code });
+    if (!isPassword(newPassword)) return res.status(400).json({ message: MESSAGES.password });
 
     // Buscar usuario
-    const user = await UsersModel.findOne({ email });
+    const user = await UsersModel.findOne(emailQuery(email));
 
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });

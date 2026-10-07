@@ -13,7 +13,7 @@ async function request(path, { method = "GET", token, body } = {}) {
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch {
-    throw new Error("No se pudo conectar con el servidor. Revisa que el backend este corriendo.");
+    throw new Error("No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.");
   }
   const raw = await response.text();
   let data = {};
@@ -33,6 +33,21 @@ export const shopApi = {
   categories: () => request("/categories"),
   orders: (token) => request("/orders/mine", { token }),
   createOrder: (token, order) => request("/orders", { method: "POST", token, body: order }),
+
+  // Codigos promocionales
+  validatePromo: (token, code, subtotal) =>
+    request("/promotions/validate", { method: "POST", token, body: { code, subtotal } }),
+
+  // Notificaciones
+  notifications: (token) => request("/notifications", { token }),
+  readNotification: (token, id) => request(`/notifications/${id}/read`, { method: "PUT", token }),
+  readAllNotifications: (token) => request("/notifications/read-all", { method: "PUT", token }),
+
+  // Direcciones guardadas
+  addresses: (token) => request("/users/me/addresses", { token }),
+  addAddress: (token, data) => request("/users/me/addresses", { method: "POST", token, body: data }),
+  updateAddress: (token, id, data) => request(`/users/me/addresses/${id}`, { method: "PUT", token, body: data }),
+  deleteAddress: (token, id) => request(`/users/me/addresses/${id}`, { method: "DELETE", token }),
 };
 
 export function productView(product) {

@@ -2,15 +2,17 @@ import { StyleSheet, Text, View } from "react-native";
 import AuthScreen from "../components/AuthScreen";
 import Brand from "../components/Brand";
 import CodeInput from "../components/CodeInput";
+import Field from "../components/Field";
 import PrimaryButton from "../components/PrimaryButton";
 import ResendCode from "../components/ResendCode";
 import LinkRow from "../components/LinkRow";
 import useVerifyEmail from "../hooks/useVerifyEmail";
+import { emailChars } from "../utils/validators";
 import { colors, spacing } from "../theme";
 
 export default function VerifyEmailScreen({ navigation, route }) {
-  const email = route.params?.email || "";
-  const { code, setCode, loading, handleVerify, resend } = useVerifyEmail(navigation, email);
+  const { email, setEmail, codeSent, sendCode, code, setCode, loading, handleVerify, resend } =
+    useVerifyEmail(navigation, route.params?.email || "");
 
   return (
     <AuthScreen
@@ -19,29 +21,52 @@ export default function VerifyEmailScreen({ navigation, route }) {
       canGoBack={navigation.canGoBack()}
       footer={
         <LinkRow
-          text="¿Correo equivocado?"
-          actionLabel="Volver al registro"
-          onPress={() => navigation.navigate("Register")}
+          text="¿Ya está verificada?"
+          actionLabel="Inicia Sesión"
+          onPress={() => navigation.navigate("Login")}
         />
       }
     >
       <Brand first="CONFIRMA TU" second="CORREO" size={24} />
-      <Text style={styles.subtitle}>
-        Enviamos un código de 6 dígitos a{"\n"}
-        <Text style={styles.email}>{email}</Text>
-      </Text>
 
-      <View style={styles.form}>
-        <CodeInput value={code} onChange={setCode} />
+      {codeSent ? (
+        <>
+          <Text style={styles.subtitle}>
+            Enviamos un código de 6 dígitos a{"\n"}
+            <Text style={styles.email}>{email}</Text>
+          </Text>
 
-        <View style={{ height: spacing.xl }} />
+          <View style={styles.form}>
+            <CodeInput value={code} onChange={setCode} />
+            <View style={{ height: spacing.xl }} />
+            <PrimaryButton label="Verificar Cuenta" onPress={handleVerify} loading={loading} />
+            <View style={{ height: spacing.md }} />
+            <ResendCode onResend={resend} />
+          </View>
+        </>
+      ) : (
+        <>
+          <Text style={styles.subtitle}>
+            Escribe el correo de tu cuenta y te enviaremos un código para verificarla.
+          </Text>
 
-        <PrimaryButton label="Verificar Cuenta" onPress={handleVerify} loading={loading} />
-
-        <View style={{ height: spacing.md }} />
-
-        <ResendCode onResend={resend} />
-      </View>
+          <View style={styles.form}>
+            <Field
+              label="CORREO ELECTRONICO"
+              icon="mail-outline"
+              value={email}
+              onChangeText={(v) => setEmail(emailChars(v))}
+              placeholder="nombre@callezero.com"
+              keyboardType="email-address"
+              autoComplete="email"
+              textContentType="emailAddress"
+              returnKeyType="send"
+              onSubmitEditing={sendCode}
+            />
+            <PrimaryButton label="Enviar Código" onPress={sendCode} loading={loading} />
+          </View>
+        </>
+      )}
     </AuthScreen>
   );
 }

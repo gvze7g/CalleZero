@@ -5,14 +5,17 @@ import { colors, radius } from "../../theme";
 
 // Tarjeta de producto para grid de 2 columnas
 export default function ProductCardGrid({ product, onPress, onAdd, onFavorite, favorite, style }) {
+  const soldOut = product.stock !== undefined && Number(product.stock) <= 0;
   return (
     <Pressable style={[styles.card, style]} onPress={onPress}>
       <View style={styles.imageWrap}>
         {product.image ? <Image source={product.image} style={styles.image} resizeMode="cover" /> : <View style={styles.image} />}
-        {product.tag ? <Tag label={product.tag} style={styles.tag} /> : null}
-        <Pressable style={styles.add} hitSlop={6} onPress={onAdd}>
-          <Ionicons name="add" size={18} color="#fff" />
-        </Pressable>
+        {soldOut ? <Tag label="AGOTADO" style={styles.tag} /> : product.tag ? <Tag label={product.tag} style={styles.tag} /> : null}
+        {!soldOut && onAdd ? (
+          <Pressable style={styles.add} hitSlop={6} onPress={onAdd}>
+            <Ionicons name="add" size={18} color="#fff" />
+          </Pressable>
+        ) : null}
       </View>
 
       <Text style={styles.brand} numberOfLines={1}>

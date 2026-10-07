@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { authApi } from "../api/auth";
 import { showError, showInfo } from "../utils/alerts";
+import { isPassword, MESSAGES } from "../utils/validators";
 
 // Guarda la nueva contraseña
 export default function useResetPassword(navigation, email, code) {
@@ -9,22 +10,9 @@ export default function useResetPassword(navigation, email, code) {
   const [loading, setLoading] = useState(false);
 
   const handleReset = async () => {
-    if (!password || !confirm) {
-      showError("Completa ambos campos");
-      return;
-    }
-    if (password.length < 8) {
-      showError("La contraseña debe tener al menos 8 caracteres");
-      return;
-    }
-    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
-      showError("La contraseña debe combinar letras y números");
-      return;
-    }
-    if (password !== confirm) {
-      showError("Las contraseñas no coinciden");
-      return;
-    }
+    if (!password || !confirm) return showError("Completa ambos campos");
+    if (!isPassword(password)) return showError(MESSAGES.password);
+    if (password !== confirm) return showError("Las contraseñas no coinciden");
 
     setLoading(true);
     try {

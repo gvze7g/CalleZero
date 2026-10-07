@@ -4,19 +4,33 @@ import { useShop } from "../context/ShopContext";
 
 export const sortOptions = ["Popular", "Novedades", "Precio: menor", "Precio: mayor"];
 
-// Catalogo con orden y filtro por categoria
-export default function useCatalog() {
+export const priceRanges = [
+  { id: "all", label: "Todos", min: 0, max: Infinity },
+  { id: "0-30", label: "Hasta $30", min: 0, max: 30 },
+  { id: "30-60", label: "$30 - $60", min: 30, max: 60 },
+  { id: "60+", label: "Más de $60", min: 60, max: Infinity },
+];
+
+// Catalogo con orden, filtros por categoria, precio y stock
+export default function useCatalog(params = {}) {
   const { addToCart } = useShop();
-  const [sortIndex, setSortIndex] = useState(0);
-  const [filters, setFilters] = useState([]);
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [sortIndex, setSortIndex] = useState(0);
+  const [selectedCats, setSelectedCats] = useState(params.category ? [params.category] : []);
+  const [priceId, setPriceId] = useState("all");
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(Boolean(params.openFilters));
+  const [columns, setColumns] = useState(2);
+
   const load = useCallback(async () => {
     try {
-      const data = await shopApi.products();
-      setProducts(data.filter((p) => p.isActive !== false).map(productView));
+      const [p, c] = await Promise.all([shopApi.products(), shopApi.categories()]);
+      setProducts(p.filter((x) => x.isActive !== false).map(productView));
+      setCategories(c.filter((x) => x.isActive !== false));
     } catch {
     } finally {
       setLoading(false);
@@ -33,42 +47,59 @@ export default function useCatalog() {
     load();
   };
 
-  const filtered = useMemo(
-    () =>
-      products
-        .filter((p) => !filters.length || filters.includes(p.categoryId?.name))
-        .sort((a, b) => {
-          if (sortIndex === 1) return new Date(b.createdAt) - new Date(a.createdAt);
-          if (sortIndex === 2) return a.price - b.price;
-          if (sortIndex === 3) return b.price - a.price;
-          return 0;
-        }),
-    [products, filters, sortIndex]
-  );
+  const filtered = useMemo(() => {
+    const range = priceRanges.find((r) => r.id === priceId);
+    return products
+      .filter((p) => !selectedCats.length || selectedCats.includes(p.categoryId?.name))
+      .filter((p) => p.price >= range.min && p.price < range.max)
+      .filter((p) => !inStockOnly || p.stock > 0)
+      .sort((a, b) => {
+        if (sortIndex === 1) return new Date(b.createdAt) - new Date(a.createdAt);
+        if (sortIndex === 2) return a.price - b.price;
+        if (sortIndex === 3) return b.price - a.price;
+        return b.stock - a.stock;
+      });
+  }, [products, selectedCats, priceId, inStockOnly, sortIndex]);
 
-  const nextSort = () => setSortIndex((i) => (i + 1) % sortOptions.length);
+  const toggleCategory = (name) =>
+    setSelectedCats((list) => (list.includes(name) ? list.filter((x) => x !== name) : [...list, name]));
 
-  const toggleAllFilters = () =>
-    setFilters(
-      filters.length
-        ? []
-        : [...new Set(products.map((p) => p.categoryId?.name).filter(Boolean))]
-    );
+  const clearFilters = () => {
+    setSelectedCats([]);
+    setPriceId("all");
+    setInStockOnly(false);
+    setSortIndex(0);
+  };
 
-  const removeFilter = (f) => setFilters((list) => list.filter((x) => x !== f));
-  const clearFilters = () => setFilters([]);
+  // Chips de filtros activos (para quitarlos rapido)
+  const activeChips = [
+    ...selectedCats.map((c) => ({ key: `c-${c}`, label: c, remove: () => toggleCategory(c) })),
+    ...(priceId !== "all" ? [{ key: "price", label: priceRanges.find((r) => r.id === priceId).label, remove: () => setPriceId("all") }] : []),
+    ...(inStockOnly ? [{ key: "stock", label: "Con stock", remove: () => setInStockOnly(false) }] : []),
+  ];
 
   return {
-    sort: sortOptions[sortIndex],
-    nextSort,
-    filters,
-    toggleAllFilters,
-    removeFilter,
-    clearFilters,
     filtered,
+    categories,
     loading,
     refreshing,
     refresh,
     addToCart,
+    sort: sortOptions[sortIndex],
+    sortIndex,
+    setSortIndex,
+    nextSort: () => setSortIndex((i) => (i + 1) % sortOptions.length),
+    selectedCats,
+    toggleCategory,
+    priceId,
+    setPriceId,
+    inStockOnly,
+    setInStockOnly,
+    clearFilters,
+    activeChips,
+    filtersOpen,
+    setFiltersOpen,
+    columns,
+    toggleColumns: () => setColumns((c) => (c === 2 ? 1 : 2)),
   };
 }

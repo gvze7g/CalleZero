@@ -1,27 +1,31 @@
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 
 import ProductCardGrid from "../../components/shop/ProductCardGrid";
+import FilterSheet from "../../components/shop/FilterSheet";
 import useCatalog from "../../hooks/useCatalog";
 import { colors, radius, spacing } from "../../theme";
 
 export default function CatalogScreen({ navigation, route }) {
-  const title = route.params?.title || "NUEVOS LANZAMIENTOS";
+  const title = route.params?.title || "TODOS LOS PRODUCTOS";
+  const catalog = useCatalog(route.params);
   const {
-    sort,
-    nextSort,
-    filters,
-    toggleAllFilters,
-    removeFilter,
-    clearFilters,
     filtered,
     loading,
     refreshing,
     refresh,
     addToCart,
-  } = useCatalog();
+    sort,
+    nextSort,
+    activeChips,
+    clearFilters,
+    filtersOpen,
+    setFiltersOpen,
+    columns,
+    toggleColumns,
+  } = catalog;
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -36,55 +40,71 @@ export default function CatalogScreen({ navigation, route }) {
           {title}
         </Text>
         <View style={styles.hRight}>
-          <Pressable hitSlop={8}>
-            <Ionicons name="grid-outline" size={20} color={colors.text} />
+          <Pressable hitSlop={8} onPress={toggleColumns}>
+            <Ionicons name={columns === 2 ? "list-outline" : "grid-outline"} size={20} color={colors.text} />
           </Pressable>
-          <Pressable hitSlop={8}>
-            <Ionicons name="options-outline" size={20} color={colors.text} />
+          <Pressable hitSlop={8} onPress={() => setFiltersOpen(true)}>
+            <Ionicons name="options-outline" size={20} color={activeChips.length ? colors.accent : colors.text} />
           </Pressable>
         </View>
       </View>
 
-      {/* Barra de orden / filtros */}
+      {/* Barra de orden / filtros activos */}
       <View style={styles.filterBar}>
         <Pressable style={styles.sortBtn} onPress={nextSort}>
-          <Text style={styles.sortText}>Sort: {sort}</Text>
-          <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
-        </Pressable>
-        <Pressable style={styles.iconPill} onPress={toggleAllFilters}>
-          <Ionicons name="swap-vertical" size={15} color={colors.textMuted} />
+          <Ionicons name="swap-vertical" size={14} color={colors.textMuted} />
+          <Text style={styles.sortText}>{sort}</Text>
         </Pressable>
 
-        {filters.map((f) => (
-          <Pressable key={f} style={styles.activeChip} onPress={() => removeFilter(f)}>
-            <Text style={styles.activeChipText}>{f}</Text>
-            <Ionicons name="close" size={13} color="#fff" />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          {activeChips.map((c) => (
+            <Pressable key={c.key} style={styles.activeChip} onPress={c.remove}>
+              <Text style={styles.activeChipText}>{c.label}</Text>
+              <Ionicons name="close" size={13} color="#fff" />
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        {activeChips.length > 0 && (
+          <Pressable hitSlop={6} onPress={clearFilters}>
+            <Text style={styles.clear}>Limpiar</Text>
           </Pressable>
-        ))}
-
-        <View style={{ flex: 1 }} />
-        <Pressable hitSlop={6} onPress={clearFilters}>
-          <Text style={styles.clear}>Clear all</Text>
-        </Pressable>
+        )}
       </View>
 
+      <Text style={styles.count}>{filtered.length} productos</Text>
+
       <FlatList
+        key={columns}
         data={filtered}
         keyExtractor={(item) => item.id}
-        numColumns={2}
+        numColumns={columns}
         showsVerticalScrollIndicator={false}
-        columnWrapperStyle={styles.column}
+        columnWrapperStyle={columns === 2 ? styles.column : undefined}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.text} />}
-        ListEmptyComponent={loading ? <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} /> : <Text style={styles.empty}>No hay productos que coincidan.</Text>}
+        ListEmptyComponent={
+          loading ? (
+            <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
+          ) : (
+            <Text style={styles.empty}>No hay productos que coincidan.</Text>
+          )
+        }
         renderItem={({ item }) => (
           <ProductCardGrid
             product={item}
-            style={styles.card}
+            style={columns === 2 ? styles.card : styles.cardWide}
             onAdd={() => addToCart(item, item.sizes[0])}
             onPress={() => navigation.navigate("ProductDetail", { product: item })}
           />
         )}
+      />
+
+      <FilterSheet
+        visible={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        catalog={catalog}
+        resultsCount={filtered.length}
       />
     </SafeAreaView>
   );
@@ -127,13 +147,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   sortText: { color: colors.textMuted, fontSize: 11, fontWeight: "700" },
-  iconPill: {
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.sm,
-    padding: 7,
-  },
+  chips: { gap: 8, alignItems: "center" },
   activeChip: {
     flexDirection: "row",
     alignItems: "center",
@@ -145,8 +159,10 @@ const styles = StyleSheet.create({
   },
   activeChipText: { color: "#fff", fontSize: 11, fontWeight: "700" },
   clear: { color: colors.accent, fontSize: 11, fontWeight: "700" },
+  count: { color: colors.textFaint, fontSize: 11, paddingHorizontal: spacing.lg, marginBottom: spacing.sm },
   empty: { color: colors.textMuted, textAlign: "center", marginTop: 40 },
   list: { paddingHorizontal: spacing.lg, paddingBottom: 100 },
   column: { justifyContent: "space-between" },
-  card: { width: "48%", marginBottom: spacing.lg },
+  card: { width: "48%", flex: 0, marginBottom: spacing.lg },
+  cardWide: { width: "100%", marginBottom: spacing.xl },
 });

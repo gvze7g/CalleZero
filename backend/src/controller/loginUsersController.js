@@ -3,19 +3,25 @@ import jsonwebtoken from "jsonwebtoken";
 import usersModel from "../models/users.js";
 import { config } from "../config.js";
 import { cookieOptions, AUTH_COOKIE_MAX_AGE } from "../Utils/cookieOptions.js";
+import { startVerification } from "../Utils/verification.js";
+import { clean, isEmail, emailQuery, MESSAGES } from "../Utils/validators.js";
 
 const loginUsersController = {};
 
 loginUsersController.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = clean(req.body.email).toLowerCase();
+    const { password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: "Correo y contraseña requeridos" });
     }
+    if (!isEmail(email)) {
+      return res.status(400).json({ message: MESSAGES.email });
+    }
 
     // Verificar si el correo existe
-    const userFound = await usersModel.findOne({ email });
+    const userFound = await usersModel.findOne(emailQuery(email));
 
     if (!userFound) {
       return res.status(404).json({ message: "Usuario no encontrado" });
@@ -48,6 +54,20 @@ loginUsersController.login = async (req, res) => {
     userFound.loginAttempts = 0;
     userFound.timeOut = null;
     await userFound.save();
+
+    // Cuenta sin verificar: se envia un codigo nuevo
+    if (!userFound.isVerified) {
+      try {
+        await startVerification(userFound);
+      } catch (mailError) {
+        console.error("Error enviando codigo:", mailError);
+      }
+      return res.status(403).json({
+        message: "Tu cuenta no está verificada. Te enviamos un código a tu correo.",
+        needsVerification: true,
+        email: userFound.email,
+      });
+    }
 
     // Generar token
     const token = jsonwebtoken.sign(

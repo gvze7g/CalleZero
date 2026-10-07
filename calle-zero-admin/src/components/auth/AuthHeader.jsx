@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import React from "react";
 import { HelpCircle } from "lucide-react";
 import logo from "../../assets/logo-1.png";
@@ -20,6 +21,11 @@ const AuthHeader = () => {
 
         <button
           type="button"
+          onClick={() =>
+            toast.info("¿Problemas para entrar?", {
+              description: "Usa \"¿Olvidaste tu contraseña?\" o \"Verificar ahora\" en el inicio de sesión. Si tu cuenta está bloqueada, espera 15 minutos.",
+            })
+          }
           className="flex shrink-0 items-center gap-1 sm:gap-2 font-[Open_Sans] text-[12px] sm:text-[14px] font-semibold text-white/85 transition hover:text-white"
         >
           <HelpCircle size={14} strokeWidth={2.2} />

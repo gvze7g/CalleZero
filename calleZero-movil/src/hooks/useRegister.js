@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { authApi } from "../api/auth";
 import { showError } from "../utils/alerts";
+import { clean, isEmail, isName, isPassword, MESSAGES } from "../utils/validators";
 
 // Registro de cuenta y paso a verificar correo
 export default function useRegister(navigation) {
@@ -16,33 +17,18 @@ export default function useRegister(navigation) {
   const setField = (key) => (value) => setForm((f) => ({ ...f, [key]: value }));
 
   const handleRegister = async () => {
-    const fullName = form.fullName.trim();
-    const email = form.email.trim().toLowerCase();
+    const fullName = clean(form.fullName);
+    const email = clean(form.email).toLowerCase();
 
-    if (!fullName || !email || !form.password) {
+    if (!fullName || !email || !form.password || !form.confirmPassword) {
       showError("Debes completar todos los campos");
       return;
     }
-    if (fullName.length < 3) {
-      showError("El nombre debe tener al menos 3 caracteres");
-      return;
-    }
-    if (form.password.length < 8) {
-      showError("La contraseña debe tener al menos 8 caracteres");
-      return;
-    }
-    if (!/[a-zA-Z]/.test(form.password) || !/[0-9]/.test(form.password)) {
-      showError("La contraseña debe combinar letras y números");
-      return;
-    }
-    if (form.password !== form.confirmPassword) {
-      showError("Las contraseñas no coinciden");
-      return;
-    }
-    if (!accepted) {
-      showError("Debes aceptar los Términos de Servicio y la Política de Privacidad");
-      return;
-    }
+    if (!isName(fullName)) return showError(MESSAGES.name);
+    if (!isEmail(email)) return showError(MESSAGES.email);
+    if (!isPassword(form.password)) return showError(MESSAGES.password);
+    if (form.password !== form.confirmPassword) return showError("Las contraseñas no coinciden");
+    if (!accepted) return showError("Debes aceptar los Términos de Servicio y la Política de Privacidad");
 
     setLoading(true);
     try {

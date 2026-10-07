@@ -15,6 +15,9 @@ export const CartProvider = ({ children }) => {
         }
     });
 
+    // Codigo promocional aplicado
+    const [promo, setPromo] = useState(null);
+
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
     }, [cart]);
@@ -98,11 +101,14 @@ export const CartProvider = ({ children }) => {
         );
     };
 
-    const clearCart = () => setCart([]);
+    const clearCart = () => {
+        setCart([]);
+        setPromo(null);
+    };
 
     return (
         <CartContext.Provider
-            value={{ cart, addToCart, updateQuantity, removeItem, clearCart }}
+            value={{ cart, addToCart, updateQuantity, removeItem, clearCart, promo, setPromo }}
         >
             {children}
         </CartContext.Provider>

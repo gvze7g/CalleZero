@@ -5,6 +5,7 @@ import { Menu, Search, ShoppingCart, X, LogOut, User } from "lucide-react";
 import { toast } from "sonner";
 import useAuth from "../../hooks/useAuth";
 import useCart from "../../hooks/useCart";
+import NotificationBell from "./NotificationBell";
 import { apiFetch, clearToken } from "../../lib/api.js";
 
 const Navbar = () => {
@@ -141,6 +142,8 @@ const Navbar = () => {
                                 </span>
                             )}
                         </button>
+
+                        {!isLoadingUser && isAuthenticated && <NotificationBell />}
 
                         {!isLoadingUser && isAuthenticated ? (
                             <div className="relative">

@@ -170,6 +170,13 @@ const Login = () => {
         />
 
         <p
+          onClick={() => navigate("/verify-account")}
+          className="mt-3 cursor-pointer text-center text-xs text-gray-500 hover:text-purple-400"
+        >
+          ¿No verificaste tu cuenta? <span className="font-bold text-purple-400">Verificar ahora</span>
+        </p>
+
+        <p
           onClick={() => navigate("/")}
           className="mt-3 cursor-pointer text-center text-xs text-gray-500 hover:text-purple-400"
         >

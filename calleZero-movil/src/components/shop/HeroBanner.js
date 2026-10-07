@@ -3,7 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Tag from "./Tag";
 import { colors, radius } from "../../theme";
 
-export default function HeroBanner({ data }) {
+export default function HeroBanner({ data, onPress }) {
   return (
     <ImageBackground
       source={data.image}
@@ -20,7 +20,7 @@ export default function HeroBanner({ data }) {
         <Text style={styles.title}>{data.title}</Text>
         <View style={styles.bottomRow}>
           <Text style={styles.subtitle}>{data.subtitle}</Text>
-          <Pressable style={styles.cta}>
+          <Pressable style={styles.cta} onPress={onPress}>
             <Text style={styles.ctaText}>{data.cta}</Text>
           </Pressable>
         </View>

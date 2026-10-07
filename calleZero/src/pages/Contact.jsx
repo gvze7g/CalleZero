@@ -4,6 +4,22 @@ import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
 import ContactInfoCard from "../components/contact/ContactInfoCard";
 import { Mail, MessageCircle, Globe, Camera, X } from "lucide-react";
+import { apiFetch } from "../lib/api.js";
+import { isEmail, isName, isSafeText, MESSAGES } from "../utils/validators.js";
+
+// Solo se permite escribir lo valido en cada campo
+const sanitize = {
+    name: (v) => v.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ' ]/g, "").slice(0, 50),
+    email: (v) => v.replace(/\s/g, "").slice(0, 100),
+    subject: (v) => v.replace(/[<>{}$\\]/g, "").slice(0, 80),
+    message: (v) => v.replace(/[<>{}$\\]/g, "").slice(0, 1000),
+};
+
+const SOCIALS = {
+    instagram: "https://www.instagram.com/",
+    x: "https://x.com/",
+    facebook: "https://www.facebook.com/",
+};
 
 const Contact = () => {
     const [form, setForm] = useState({
@@ -13,14 +29,17 @@ const Contact = () => {
         message: "",
     });
 
+    const [isSending, setIsSending] = useState(false);
+
     const handleChange = (field, value) => {
         setForm((prev) => ({
             ...prev,
-            [field]: value,
+            [field]: sanitize[field] ? sanitize[field](value) : value,
         }));
     };
 
-    const handleSubmit = () => {
+    // Envia el mensaje con POST /api/contact
+    const handleSubmit = async () => {
         if (
             !form.name.trim() ||
             !form.email.trim() ||
@@ -30,15 +49,33 @@ const Contact = () => {
             toast.error("Debes completar todos los campos");
             return;
         }
+        if (!isName(form.name)) return toast.error(MESSAGES.name);
+        if (!isEmail(form.email)) return toast.error(MESSAGES.email);
+        if (!isSafeText(form.subject, 3, 80)) return toast.error("El asunto debe tener entre 3 y 80 caracteres");
+        if (!isSafeText(form.message, 10, 1000)) return toast.error("El mensaje debe tener entre 10 y 1000 caracteres");
 
-        toast.success("Mensaje enviado correctamente");
+        setIsSending(true);
+        try {
+            const res = await apiFetch("/api/contact", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(form),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message);
 
-        setForm({
-            name: "",
-            email: "",
-            subject: "",
-            message: "",
-        });
+            toast.success(data.message || "Mensaje enviado correctamente");
+            setForm({
+                name: "",
+                email: "",
+                subject: "",
+                message: "",
+            });
+        } catch (error) {
+            toast.error(error.message || "No se pudo enviar el mensaje");
+        } finally {
+            setIsSending(false);
+        }
     };
 
     return (
@@ -69,6 +106,7 @@ const Contact = () => {
                                 onChange={(event) => handleChange("email", event.target.value)}
                                 className="w-full rounded-lg border border-white/10 bg-[#111] px-4 py-3 text-sm outline-none focus:border-purple-500 sm:text-base"
                                 placeholder="alex@callezero.com"
+                                type="email"
                             />
                         </div>
 
@@ -87,12 +125,15 @@ const Contact = () => {
                             placeholder="Cuéntanos más detalles..."
                         />
 
+                        <p className="text-right font-[Open_Sans] text-xs text-gray-500">{form.message.length}/1000</p>
+
                         <button
                             type="button"
                             onClick={handleSubmit}
-                            className="w-full rounded-lg bg-purple-500 px-6 py-3 font-[Montserrat] text-sm font-semibold text-black sm:w-auto sm:text-base"
+                            disabled={isSending}
+                            className="w-full rounded-lg bg-purple-500 px-6 py-3 font-[Montserrat] text-sm font-semibold text-black disabled:opacity-50 sm:w-auto sm:text-base"
                         >
-                            Enviar Mensaje →
+                            {isSending ? "Enviando..." : "Enviar Mensaje →"}
                         </button>
                     </div>
                 </div>
@@ -130,17 +171,17 @@ const Contact = () => {
                         </h2>
 
                         <div className="flex flex-wrap gap-3">
-                            <button className="flex items-center gap-2 rounded-full border border-purple-500 px-4 py-2 text-xs text-purple-500 transition hover:bg-purple-500 hover:text-black sm:text-sm">
+                            <button type="button" onClick={() => window.open(SOCIALS.instagram, "_blank", "noopener")} className="flex items-center gap-2 rounded-full border border-purple-500 px-4 py-2 text-xs text-purple-500 transition hover:bg-purple-500 hover:text-black sm:text-sm">
                                 <Camera size={16} />
                                 Instagram
                             </button>
 
-                            <button className="flex items-center gap-2 rounded-full border border-purple-500 px-4 py-2 text-xs text-purple-500 transition hover:bg-purple-500 hover:text-black sm:text-sm">
+                            <button type="button" onClick={() => window.open(SOCIALS.x, "_blank", "noopener")} className="flex items-center gap-2 rounded-full border border-purple-500 px-4 py-2 text-xs text-purple-500 transition hover:bg-purple-500 hover:text-black sm:text-sm">
                                 <X size={16} />
                                 X
                             </button>
 
-                            <button className="flex items-center gap-2 rounded-full border border-purple-500 px-4 py-2 text-xs text-purple-500 transition hover:bg-purple-500 hover:text-black sm:text-sm">
+                            <button type="button" onClick={() => window.open(SOCIALS.facebook, "_blank", "noopener")} className="flex items-center gap-2 rounded-full border border-purple-500 px-4 py-2 text-xs text-purple-500 transition hover:bg-purple-500 hover:text-black sm:text-sm">
                                 <span className="font-bold">F</span>
                                 Facebook
                             </button>

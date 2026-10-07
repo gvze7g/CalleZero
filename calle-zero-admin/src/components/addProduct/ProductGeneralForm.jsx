@@ -21,7 +21,8 @@ const ProductGeneralForm = ({ formData, onChange }) => {
                     </span>
                     <input
                         value={formData.name}
-                        onChange={(event) => onChange("name", event.target.value)}
+                        onChange={(event) => onChange("name", event.target.value.replace(/[<>{}$\\]/g, ""))}
+                        maxLength={80}
                         className="mt-2 h-[42px] w-full rounded-[8px] border border-white/10 bg-black px-4 font-[Open_Sans] text-white outline-none"
                         placeholder="Ej: Camiseta Oversize 'Urban Chaos'"
                     />
@@ -33,7 +34,8 @@ const ProductGeneralForm = ({ formData, onChange }) => {
                     </span>
                     <textarea
                         value={formData.description}
-                        onChange={(event) => onChange("description", event.target.value)}
+                        onChange={(event) => onChange("description", event.target.value.replace(/[<>{}$\\]/g, ""))}
+                        maxLength={1000}
                         className="mt-2 h-[118px] w-full resize-none rounded-[8px] border border-white/10 bg-black p-4 font-[Open_Sans] text-white outline-none"
                         placeholder="Describa el material, corte y detalles del diseño..."
                     />

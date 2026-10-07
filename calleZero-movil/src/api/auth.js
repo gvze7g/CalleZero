@@ -37,6 +37,7 @@ async function request(path, { method = "POST", body, token } = {}) {
     }
     const err = new Error(data?.message || "Ocurrio un error inesperado");
     err.status = response.status;
+    err.data = data || {};
     throw err;
   }
 

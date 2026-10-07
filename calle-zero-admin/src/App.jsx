@@ -13,6 +13,8 @@ import AddProductPage from "./pages/AddProductPage";
 import ProfilePage from "./pages/ProfilePage";
 import VerifyCodePage from "./pages/VerifyCodePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import VerifyAccountPage from "./pages/VerifyAccountPage";
+import PromotionsPage from "./pages/PromotionsPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const App = () => {
@@ -41,6 +43,7 @@ const App = () => {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/verify-code" element={<VerifyCodePage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/verify-account" element={<VerifyAccountPage />} />
 
           {/* Protegidas */}
           <Route
@@ -84,6 +87,15 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <CategoriesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/promotions"
+            element={
+              <ProtectedRoute>
+                <PromotionsPage />
               </ProtectedRoute>
             }
           />

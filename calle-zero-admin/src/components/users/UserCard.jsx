@@ -23,7 +23,7 @@ const UserCard = ({ user, onViewUser }) => {
                     />
                 </div>
 
-                <button className="shrink-0 text-white/65">
+                <button type="button" onClick={() => onViewUser(user)} title="Ver detalles" className="shrink-0 text-white/65 hover:text-white">
                     <MoreHorizontal size={18} />
                 </button>
             </div>

@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Field from "../components/Field";
 import PrimaryButton from "../components/PrimaryButton";
 import useEditProfile from "../hooks/useEditProfile";
+import { onlyLetters, phoneChars, safeChars } from "../utils/validators";
 import { colors, spacing } from "../theme";
 
 export default function EditProfileScreen({ navigation }) {
@@ -32,7 +33,7 @@ export default function EditProfileScreen({ navigation }) {
           label="NOMBRE COMPLETO"
           icon="person-outline"
           value={form.fullName}
-          onChangeText={setField("fullName")}
+          onChangeText={(v) => setField("fullName")(onlyLetters(v))}
           placeholder="Tu nombre"
           autoCapitalize="words"
         />
@@ -50,7 +51,7 @@ export default function EditProfileScreen({ navigation }) {
           label="TELÉFONO"
           icon="call-outline"
           value={form.phone}
-          onChangeText={setField("phone")}
+          onChangeText={(v) => setField("phone")(phoneChars(v))}
           placeholder="+503 0000-0000"
           keyboardType="phone-pad"
         />
@@ -59,7 +60,7 @@ export default function EditProfileScreen({ navigation }) {
           label="DIRECCIÓN / UBICACIÓN"
           icon="location-outline"
           value={form.location}
-          onChangeText={setField("location")}
+          onChangeText={(v) => setField("location")(safeChars(v, 120))}
           placeholder="Ciudad, país"
           autoCapitalize="words"
         />

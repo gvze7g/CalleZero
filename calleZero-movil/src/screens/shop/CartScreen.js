@@ -13,13 +13,27 @@ import { Ionicons } from "@expo/vector-icons";
 
 import QtyStepper from "../../components/shop/QtyStepper";
 import useCart from "../../hooks/useCart";
+import { promoChars } from "../../utils/validators";
 import { colors, radius, spacing } from "../../theme";
 
 const money = (n) => `$${Math.abs(n).toFixed(2)}`;
 
 export default function CartScreen({ navigation }) {
-  const { items, itemsCount, subtotal, total, promo, setPromo, removeItem, setItemQuantity } =
-    useCart();
+  const {
+    items,
+    itemsCount,
+    subtotal,
+    discount,
+    total,
+    promo,
+    promoInput,
+    setPromoInput,
+    applying,
+    applyPromo,
+    removePromo,
+    removeItem,
+    setItemQuantity,
+  } = useCart();
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -35,6 +49,16 @@ export default function CartScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        {!items.length && (
+          <View style={styles.empty}>
+            <Ionicons name="bag-outline" size={42} color={colors.textFaint} />
+            <Text style={styles.emptyText}>Tu carrito está vacío</Text>
+            <Pressable onPress={() => navigation.navigate("Catalog", { title: "TODOS LOS PRODUCTOS" })}>
+              <Text style={styles.emptyLink}>Ver productos</Text>
+            </Pressable>
+          </View>
+        )}
+
         {items.map((item) => (
           <View key={`${item.id}-${item.size}`} style={styles.row}>
             {item.image ? <Image source={item.image} style={styles.thumb} resizeMode="cover" /> : <View style={styles.thumb} />}
@@ -65,28 +89,46 @@ export default function CartScreen({ navigation }) {
 
         {/* Promo code */}
         <Text style={styles.section}>CÓDIGO PROMOCIONAL</Text>
-        <View style={styles.promoRow}>
-          <View style={styles.promoInput}>
-            <Ionicons name="pricetag-outline" size={16} color={colors.textFaint} />
-            <TextInput
-              value={promo}
-              onChangeText={setPromo}
-              placeholder="Código"
-              placeholderTextColor={colors.textFaint}
-              style={styles.promoField}
-              autoCapitalize="characters"
-            />
+        {promo ? (
+          <View style={styles.promoApplied}>
+            <Ionicons name="pricetag" size={16} color={colors.success} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.promoCode}>{promo.code}</Text>
+              <Text style={styles.promoDesc}>
+                {promo.discountType === "percent" ? `${promo.value}% de descuento` : `$${promo.value} de descuento`}
+                {promo.description ? ` · ${promo.description}` : ""}
+              </Text>
+            </View>
+            <Pressable hitSlop={8} onPress={removePromo}>
+              <Ionicons name="close" size={18} color={colors.textMuted} />
+            </Pressable>
           </View>
-          <Pressable style={styles.applyBtn}>
-            <Text style={styles.applyText}>APLICAR</Text>
-          </Pressable>
-        </View>
+        ) : (
+          <View style={styles.promoRow}>
+            <View style={styles.promoInput}>
+              <Ionicons name="pricetag-outline" size={16} color={colors.textFaint} />
+              <TextInput
+                value={promoInput}
+                onChangeText={(v) => setPromoInput(promoChars(v))}
+                placeholder="Código"
+                placeholderTextColor={colors.textFaint}
+                style={styles.promoField}
+                autoCapitalize="characters"
+                maxLength={20}
+              />
+            </View>
+            <Pressable style={[styles.applyBtn, applying && { opacity: 0.6 }]} onPress={applyPromo} disabled={applying}>
+              <Text style={styles.applyText}>{applying ? "..." : "APLICAR"}</Text>
+            </Pressable>
+          </View>
+        )}
 
         {/* Resumen */}
         <Text style={styles.section}>RESUMEN DEL PEDIDO</Text>
         <View style={styles.summary}>
           <SummaryLine label="Subtotal" value={money(subtotal)} />
           <SummaryLine label="Envío estándar" value="Gratis" accent />
+          {discount > 0 && <SummaryLine label={`Descuento (${promo.code})`} value={`-${money(discount)}`} accent />}
         </View>
       </ScrollView>
 
@@ -172,6 +214,21 @@ const styles = StyleSheet.create({
     height: 46,
   },
   promoField: { flex: 1, color: colors.text, fontSize: 13, paddingVertical: 0 },
+  promoApplied: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 12,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.success,
+    backgroundColor: colors.surfaceAlt,
+  },
+  promoCode: { color: colors.text, fontSize: 13, fontWeight: "800", letterSpacing: 1 },
+  promoDesc: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
+  empty: { alignItems: "center", gap: 10, marginVertical: 40 },
+  emptyText: { color: colors.textMuted, fontSize: 14 },
+  emptyLink: { color: colors.accent, fontSize: 13, fontWeight: "700" },
   applyBtn: {
     paddingHorizontal: 18,
     borderRadius: radius.md,

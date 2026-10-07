@@ -31,6 +31,12 @@ const sidebarLinks = [
     path: "/categories",
   },
   {
+    key: "promotions",
+    label: "Promociones",
+    icon: "TicketPercent",
+    path: "/promotions",
+  },
+  {
     key: "orders",
     label: "Pedidos",
     icon: "ShoppingCart",

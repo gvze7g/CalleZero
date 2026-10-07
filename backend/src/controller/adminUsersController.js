@@ -3,6 +3,9 @@ import Role from "../models/role.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import sendEmail from "../Utils/sendEmail.js";
+import { clean, isName, isEmail, emailQuery, MESSAGES } from "../Utils/validators.js";
+
+const ROLES = ["Cliente", "Administrador"];
 
 // Generar password temporal
 const generateTemporaryPassword = () => {
@@ -102,7 +105,9 @@ export const getUserById = async (req, res) => {
 // POST - Crear usuario (Admin)
 export const createUser = async (req, res) => {
     try {
-        const { fullName, email, role } = req.body;
+        const fullName = clean(req.body.fullName);
+        const email = clean(req.body.email).toLowerCase();
+        const { role } = req.body;
 
         // Validar datos requeridos
         if (!fullName || !email || !role) {
@@ -111,9 +116,12 @@ export const createUser = async (req, res) => {
                 message: "Completa todos los campos requeridos",
             });
         }
+        if (!isName(fullName)) return res.status(400).json({ success: false, message: MESSAGES.name });
+        if (!isEmail(email)) return res.status(400).json({ success: false, message: MESSAGES.email });
+        if (!ROLES.includes(role)) return res.status(400).json({ success: false, message: "Rol no válido" });
 
         // Verificar si el email ya existe
-        const existingUser = await Users.findOne({ email });
+        const existingUser = await Users.findOne(emailQuery(email));
         if (existingUser) {
             return res.status(409).json({
                 success: false,
@@ -188,7 +196,13 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        const { fullName, email, role, isActive } = req.body;
+        const fullName = req.body.fullName !== undefined ? clean(req.body.fullName) : undefined;
+        const email = req.body.email !== undefined ? clean(req.body.email).toLowerCase() : undefined;
+        const { role, isActive } = req.body;
+
+        if (fullName !== undefined && !isName(fullName)) return res.status(400).json({ success: false, message: MESSAGES.name });
+        if (email !== undefined && !isEmail(email)) return res.status(400).json({ success: false, message: MESSAGES.email });
+        if (role !== undefined && !ROLES.includes(role)) return res.status(400).json({ success: false, message: "Rol no válido" });
 
         const user = await Users.findById(id);
         if (!user) {
@@ -200,8 +214,8 @@ export const updateUser = async (req, res) => {
 
         // Verificar si el nuevo email ya existe (si cambió)
         if (email && email !== user.email) {
-            const existingUser = await Users.findOne({ email });
-            if (existingUser) {
+            const existingUser = await Users.findOne(emailQuery(email));
+            if (existingUser && existingUser._id.toString() !== id) {
                 return res.status(409).json({
                     success: false,
                     message: "El email ya está registrado",

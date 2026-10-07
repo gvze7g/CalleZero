@@ -56,7 +56,7 @@ const RecentOrdersTable = ({ rows }) => {
                   </div>
                 </div>
 
-                <button className="text-white/70">
+                <button type="button" onClick={() => navigate("/orders")} title="Ver pedidos" className="text-white/70 hover:text-white">
                   <MoreHorizontal size={18} />
                 </button>
               </div>

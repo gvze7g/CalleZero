@@ -1,25 +1,38 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { showError } from "../utils/alerts";
+import { showError, showInfo } from "../utils/alerts";
+import { clean, isEmail, MESSAGES } from "../utils/validators";
 
-// Inicio de sesion
-export default function useLogin() {
+// Inicio de sesion (si la cuenta no esta verificada, lleva a verificarla)
+export default function useLogin(navigation) {
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
+    const value = clean(email).toLowerCase();
+
+    if (!value || !password) {
       showError("Debes completar correo y contraseña");
+      return;
+    }
+    if (!isEmail(value)) {
+      showError(MESSAGES.email);
       return;
     }
 
     setLoading(true);
     try {
-      await signIn(email.trim().toLowerCase(), password);
+      await signIn(value, password);
     } catch (err) {
-      showError(err.message || "Credenciales incorrectas");
+      if (err.data?.needsVerification) {
+        showInfo(err.message, "Verifica tu cuenta", () =>
+          navigation.navigate("VerifyEmail", { email: err.data.email || value })
+        );
+      } else {
+        showError(err.message || "Credenciales incorrectas");
+      }
     } finally {
       setLoading(false);
     }

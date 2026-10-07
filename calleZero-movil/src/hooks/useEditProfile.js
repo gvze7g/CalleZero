@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { showError, showInfo } from "../utils/alerts";
+import { clean, isName, isPhone, isSafeText, MESSAGES } from "../utils/validators";
 
 // Edicion del perfil (PUT /api/users/me)
 export default function useEditProfile(navigation) {
@@ -15,20 +16,17 @@ export default function useEditProfile(navigation) {
   const setField = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
   const handleSave = async () => {
-    const fullName = form.fullName.trim();
+    const fullName = clean(form.fullName);
+    const phone = clean(form.phone);
+    const location = clean(form.location);
 
-    if (fullName.length < 3 || fullName.length > 50) {
-      showError("El nombre debe tener entre 3 y 50 caracteres");
-      return;
-    }
+    if (!isName(fullName)) return showError(MESSAGES.name);
+    if (phone && !isPhone(phone)) return showError(MESSAGES.phone);
+    if (location && !isSafeText(location, 3, 120)) return showError("La ubicación debe tener entre 3 y 120 caracteres válidos");
 
     setSaving(true);
     try {
-      await updateProfile({
-        fullName,
-        phone: form.phone.trim(),
-        location: form.location.trim(),
-      });
+      await updateProfile({ fullName, phone, location });
       showInfo("Perfil actualizado correctamente", "Listo", () => navigation.goBack());
     } catch (err) {
       showError(err.message || "No se pudo actualizar el perfil");

@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { shopApi } from "../api/shop";
 
+export const ORDER_STEPS = ["Pendiente", "Procesando", "Enviado", "Completado"];
+export const ORDER_FILTERS = ["Todos", "En curso", "Completados"];
+
 // Convierte una orden del backend al formato de la tarjeta
 const toCard = (o) => ({
   ...o,
@@ -10,8 +13,13 @@ const toCard = (o) => ({
   date: new Date(o.createdAt).toLocaleDateString(),
   status: o.OrderStatus,
   statusType: o.OrderStatus === "Completado" ? "ok" : "warn",
+  step: ORDER_STEPS.indexOf(o.OrderStatus),
+  itemsList: o.items,
   items: o.items.reduce((n, i) => n + (i.quantity || 1), 0),
-  thumbs: [],
+  thumbs: o.items
+    .map((i) => i.productId?.imageUrl?.[0])
+    .filter(Boolean)
+    .map((uri) => ({ uri })),
 });
 
 // Pedidos del usuario (GET /api/orders/mine)
@@ -20,6 +28,7 @@ export default function useOrderHistory() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter] = useState(0);
 
   const load = useCallback(async () => {
     try {
@@ -41,9 +50,15 @@ export default function useOrderHistory() {
     load();
   };
 
+  const active = orders.filter((o) => o.OrderStatus !== "Completado");
+  const past = orders.filter((o) => o.OrderStatus === "Completado");
+
   return {
-    active: orders.filter((o) => o.OrderStatus !== "Completado"),
-    past: orders.filter((o) => o.OrderStatus === "Completado"),
+    active: filter === 2 ? [] : active,
+    past: filter === 1 ? [] : past,
+    total: orders.length,
+    filterLabel: ORDER_FILTERS[filter],
+    nextFilter: () => setFilter((f) => (f + 1) % ORDER_FILTERS.length),
     loading,
     refreshing,
     refresh,

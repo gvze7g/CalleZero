@@ -2,6 +2,16 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { apiFetch, clearToken } from "../lib/api.js";
+import { isName, isPhone, isSafeText, MESSAGES } from "../utils/validators.js";
+
+// Solo se permite escribir lo valido en cada campo
+const sanitize = {
+    fullName: (v) => v.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ' ]/g, "").slice(0, 50),
+    phone: (v) => v.replace(/[^0-9 +-]/g, "").slice(0, 20),
+    location: (v) => v.replace(/[<>{}$\\]/g, "").slice(0, 120),
+};
+
+const PHOTO_KEY = "cz_profile_photo";
 import useAuth from "./useAuth";
 
 export default function useProfile() {
@@ -84,8 +94,40 @@ export default function useProfile() {
     const handleChange = (field, value) => {
         setForm((prev) => ({
             ...prev,
-            [field]: value,
+            [field]: sanitize[field] ? sanitize[field](value) : value,
         }));
+    };
+
+    // Foto de perfil guardada en este navegador
+    const [photo, setPhoto] = useState(() => {
+        try {
+            return localStorage.getItem(PHOTO_KEY);
+        } catch {
+            return null;
+        }
+    });
+
+    const changePhoto = (file) => {
+        if (!file) return;
+        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+            toast.error("Solo se permiten imágenes JPG, PNG o WEBP");
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error("La imagen debe pesar menos de 2 MB");
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            try {
+                localStorage.setItem(PHOTO_KEY, reader.result);
+            } catch {
+                // sin espacio: solo se muestra en esta sesion
+            }
+            setPhoto(reader.result);
+            toast.success("Foto actualizada");
+        };
+        reader.readAsDataURL(file);
     };
 
     const saveProfile = async (event) => {
@@ -93,6 +135,21 @@ export default function useProfile() {
 
         if (!form.fullName.trim()) {
             toast.error("El nombre es requerido");
+            return;
+        }
+
+        if (!isName(form.fullName)) {
+            toast.error(MESSAGES.name);
+            return;
+        }
+
+        if (form.phone.trim() && !isPhone(form.phone)) {
+            toast.error(MESSAGES.phone);
+            return;
+        }
+
+        if (form.location.trim() && !isSafeText(form.location, 3, 120)) {
+            toast.error("La ubicación debe tener entre 3 y 120 caracteres válidos");
             return;
         }
 
@@ -107,12 +164,17 @@ export default function useProfile() {
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify(form),
+                    body: JSON.stringify({
+                        fullName: form.fullName.trim(),
+                        phone: form.phone.trim(),
+                        location: form.location.trim(),
+                    }),
                 }
             );
 
             if (!response.ok) {
-                throw new Error("Error al actualizar");
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.message || "Error al actualizar el perfil");
             }
 
             const data = await response.json();
@@ -122,7 +184,7 @@ export default function useProfile() {
             toast.success("Perfil actualizado correctamente");
         } catch (error) {
             console.error("Error:", error);
-            toast.error("Error al actualizar el perfil");
+            toast.error(error.message || "Error al actualizar el perfil");
         } finally {
             setIsSaving(false);
         }
@@ -167,5 +229,7 @@ export default function useProfile() {
         saveProfile,
         handleLogout,
         getInitials,
+        photo,
+        changePhoto,
     };
 }

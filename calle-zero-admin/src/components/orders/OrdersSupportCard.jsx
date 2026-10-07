@@ -1,5 +1,6 @@
 import React from "react";
 import { Box } from "lucide-react";
+import { toast } from "sonner";
 import SectionCard from "../shared/SectionCard";
 
 const OrdersSupportCard = () => {
@@ -23,7 +24,15 @@ const OrdersSupportCard = () => {
           </div>
         </div>
 
-        <button className="rounded-[10px] border border-white/10 bg-black px-5 py-3 font-[Open_Sans] text-[14px] font-bold text-white">
+        <button
+          type="button"
+          onClick={() =>
+            toast.info("Cómo atender un pedido", {
+              description: "Cambia el estado del pedido en la tabla. El cliente recibe una notificación automática en la app y en la tienda.",
+            })
+          }
+          className="rounded-[10px] border border-white/10 bg-black px-5 py-3 font-[Open_Sans] text-[14px] font-bold text-white hover:bg-white/5"
+        >
           Contactar Soporte
         </button>
       </div>

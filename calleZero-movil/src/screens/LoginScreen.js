@@ -5,10 +5,11 @@ import Field from "../components/Field";
 import PrimaryButton from "../components/PrimaryButton";
 import LinkRow from "../components/LinkRow";
 import useLogin from "../hooks/useLogin";
+import { emailChars } from "../utils/validators";
 import { colors, spacing } from "../theme";
 
 export default function LoginScreen({ navigation }) {
-  const { email, setEmail, password, setPassword, loading, handleLogin } = useLogin();
+  const { email, setEmail, password, setPassword, loading, handleLogin } = useLogin(navigation);
 
   return (
     <AuthScreen
@@ -31,7 +32,7 @@ export default function LoginScreen({ navigation }) {
           label="CORREO ELECTRONICO"
           icon="mail-outline"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(v) => setEmail(emailChars(v))}
           placeholder="nombre@callezero.com"
           keyboardType="email-address"
           autoComplete="email"
@@ -59,6 +60,10 @@ export default function LoginScreen({ navigation }) {
         </Pressable>
 
         <PrimaryButton label="Iniciar Sesión" onPress={handleLogin} loading={loading} />
+
+        <Pressable onPress={() => navigation.navigate("VerifyEmail")} hitSlop={8} style={styles.verifyWrap}>
+          <Text style={styles.verify}>¿No verificaste tu cuenta? <Text style={styles.forgot}>Verificar ahora</Text></Text>
+        </Pressable>
       </View>
     </AuthScreen>
   );
@@ -74,4 +79,6 @@ const styles = StyleSheet.create({
   form: { marginTop: spacing.sm },
   forgotWrap: { alignSelf: "flex-end", marginTop: -spacing.sm, marginBottom: spacing.xl },
   forgot: { color: colors.accent, fontSize: 12, fontWeight: "600" },
+  verifyWrap: { alignSelf: "center", marginTop: spacing.lg },
+  verify: { color: colors.textMuted, fontSize: 12 },
 });

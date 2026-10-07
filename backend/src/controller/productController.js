@@ -1,6 +1,30 @@
 import productModel from "../models/product.js";
 import cloudinary from "../Utils/cloudinary.js";
 import fs from "fs";
+import mongoose from "mongoose";
+import { clean, isSafeText, isPositiveNumber, isNonNegativeInt } from "../Utils/validators.js";
+
+const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "Única", "28", "30", "32", "34", "36", "38", "40", "42", "44"];
+
+// Devuelve el mensaje de error o null
+const productError = ({ name, price, categoryId, stock, description, sku }, sizes) => {
+  if (!isSafeText(name, 3, 80)) return "El nombre debe tener entre 3 y 80 caracteres válidos";
+  if (!isPositiveNumber(price) || Number(price) > 10000) return "El precio debe ser un número mayor a 0 (máx. 10000)";
+  if (!mongoose.isValidObjectId(categoryId)) return "Selecciona una categoría válida";
+  if (stock !== undefined && stock !== "" && (!isNonNegativeInt(stock) || Number(stock) > 100000)) return "El stock debe ser un número entero de 0 o más";
+  if (description && !isSafeText(description, 0, 1000)) return "La descripción tiene caracteres no permitidos o es muy larga (máx. 1000)";
+  if (sku && !/^[A-Za-z0-9-]{2,30}$/.test(clean(sku))) return "El SKU solo puede tener letras, números y guiones";
+  if (sizes && (!Array.isArray(sizes) || sizes.some((s) => !SIZES.includes(s)))) return "Tallas no válidas";
+  return null;
+};
+
+const parseSizes = (size) => {
+  try {
+    return typeof size === "string" ? JSON.parse(size) : size;
+  } catch {
+    return null;
+  }
+};
 
 const productController = {};
 
@@ -94,6 +118,13 @@ productController.InsertProducts = async (req, res) => {
       return res.status(400).json({ message: "Faltan campos requeridos" });
     }
 
+    const parsedSize = parseSizes(size);
+    const invalid = productError(req.body, parsedSize);
+    if (invalid) {
+      cleanupLocalFiles(req.files);
+      return res.status(400).json({ message: invalid });
+    }
+
     let imageUrl = [];
 
     if (req.files && req.files.length > 0) {
@@ -115,12 +146,10 @@ productController.InsertProducts = async (req, res) => {
       }
     }
 
-    const parsedSize = typeof size === "string" ? JSON.parse(size) : size;
-
     const newProduct = new productModel({
-      name,
+      name: clean(name),
       price: Number(price),
-      description,
+      description: clean(description),
       categoryId,
       stock: Number(stock) || 0,
       size: parsedSize,
@@ -170,6 +199,13 @@ productController.updateProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    const parsedSize = parseSizes(size);
+    const invalid = productError(req.body, parsedSize);
+    if (invalid) {
+      cleanupLocalFiles(req.files);
+      return res.status(400).json({ message: invalid });
+    }
+
     // Imágenes que se conservan (si no llega el campo, se conservan todas las actuales)
     let keptImages = product.imageUrl;
     if (existingImages !== undefined) {
@@ -198,14 +234,12 @@ productController.updateProduct = async (req, res) => {
 
     const imageUrl = [...keptImages, ...newImageUrls].slice(0, 4);
 
-    const parsedSize = typeof size === "string" ? JSON.parse(size) : size;
-
     const updated = await productModel.findByIdAndUpdate(
       req.params.id,
       {
-        name,
+        name: clean(name),
         price: Number(price),
-        description,
+        description: clean(description),
         categoryId,
         stock: Number(stock) || 0,
         size: parsedSize,

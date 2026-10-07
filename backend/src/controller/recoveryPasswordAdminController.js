@@ -5,6 +5,7 @@ import sendEmail from "../Utils/sendEmail.js";
 import userModel from "../models/users.js";
 import { config } from "../config.js";
 import { cookieOptions } from "../Utils/cookieOptions.js";
+import { isEmail, isPassword, emailQuery, MESSAGES } from "../Utils/validators.js";
 
 const recoveryPasswordAdminController = {};
 
@@ -47,8 +48,11 @@ recoveryPasswordAdminController.requestCode = async (req, res) => {
     if (!email) {
       return res.status(400).json({ success: false, message: "Email requerido" });
     }
+    if (!isEmail(email)) {
+      return res.status(400).json({ success: false, message: MESSAGES.email });
+    }
 
-    const userFound = await userModel.findOne({ email });
+    const userFound = await userModel.findOne(emailQuery(email));
 
     if (!userFound) {
       return res.status(404).json({ success: false, message: "Usuario no encontrado" });
@@ -67,7 +71,7 @@ recoveryPasswordAdminController.requestCode = async (req, res) => {
     res.cookie("recoveryCookie", token, cookieOptions(15 * 60 * 1000));
 
     // Enviar email
-    sendRecoveryEmail(email, randomCode);
+    sendRecoveryEmail(userFound.email, randomCode);
 
     return res.status(200).json({ 
       success: true, 
@@ -132,8 +136,8 @@ recoveryPasswordAdminController.newPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: "Las contraseñas no coinciden" });
     }
 
-    if (newPassword.length < 8) {
-      return res.status(400).json({ success: false, message: "Mínimo 8 caracteres" });
+    if (!isPassword(newPassword)) {
+      return res.status(400).json({ success: false, message: MESSAGES.password });
     }
 
     const token = req.cookies.recoveryCookie;
@@ -152,7 +156,7 @@ recoveryPasswordAdminController.newPassword = async (req, res) => {
     const passwordHash = await bcrypt.hash(newPassword, 10);
 
     await userModel.findOneAndUpdate(
-      { email: decoded.email },
+      emailQuery(decoded.email),
       { password: passwordHash },
       { new: true }
     );

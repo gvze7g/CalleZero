@@ -26,8 +26,14 @@ const Cart = () => {
         clearCart,
         addToCart,
         subtotal,
-        taxes,
+        discount,
         total,
+        promo,
+        promoInput,
+        setPromoInput,
+        isApplying,
+        applyPromo,
+        removePromo,
     } = useCart();
 
     const {
@@ -38,7 +44,7 @@ const Cart = () => {
         openCheckout,
         closeCheckout,
         submitCheckout,
-    } = useCheckout({ cart, total, clearCart });
+    } = useCheckout({ cart, total, clearCart, promo });
 
     const { products: suggestedProducts } = useFeaturedProducts(4);
 
@@ -197,10 +203,48 @@ const Cart = () => {
                                     <span className="text-gray-400">Envío</span>
                                     <strong>Gratis</strong>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400">Impuestos</span>
-                                    <strong>${taxes.toFixed(2)}</strong>
-                                </div>
+                                {discount > 0 && (
+                                    <div className="flex justify-between text-green-400">
+                                        <span>Descuento ({promo.code})</span>
+                                        <strong>-${discount.toFixed(2)}</strong>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Codigo promocional */}
+                            <div className="mt-6 border-t border-white/10 pt-5">
+                                {promo ? (
+                                    <div className="flex items-center justify-between rounded-lg border border-green-500/40 bg-green-500/10 px-4 py-3">
+                                        <div>
+                                            <p className="font-[Montserrat] text-sm font-bold tracking-wider">{promo.code}</p>
+                                            <p className="font-[Open_Sans] text-xs text-gray-400">
+                                                {promo.discountType === "percent" ? `${promo.value}% de descuento` : `$${promo.value} de descuento`}
+                                            </p>
+                                        </div>
+                                        <button type="button" onClick={removePromo} className="text-gray-400 hover:text-white">
+                                            <X size={18} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <input
+                                            value={promoInput}
+                                            onChange={(e) => setPromoInput(e.target.value)}
+                                            onKeyDown={(e) => e.key === "Enter" && applyPromo()}
+                                            placeholder="Código promocional"
+                                            maxLength={20}
+                                            className="min-w-0 flex-1 rounded-lg border border-white/10 bg-black px-4 py-3 font-[Open_Sans] text-sm uppercase tracking-wider outline-none focus:border-purple-500"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={applyPromo}
+                                            disabled={isApplying}
+                                            className="rounded-lg border border-purple-500 px-4 font-[Montserrat] text-sm font-bold text-purple-500 transition hover:bg-purple-500 hover:text-black disabled:opacity-50"
+                                        >
+                                            {isApplying ? "..." : "Aplicar"}
+                                        </button>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-6">
@@ -300,14 +344,14 @@ const Cart = () => {
                         </div>
 
                         <div className="grid gap-4 md:grid-cols-2">
-                            <input value={checkoutForm.fullName} onChange={(e) => handleCheckoutChange("fullName", e.target.value)} placeholder="Nombre completo" className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500" />
-                            <input value={checkoutForm.city} onChange={(e) => handleCheckoutChange("city", e.target.value)} placeholder="Ciudad" className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500" />
-                            <input value={checkoutForm.address} onChange={(e) => handleCheckoutChange("address", e.target.value)} placeholder="Dirección" className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500 md:col-span-2" />
-                            <input value={checkoutForm.zipCode} onChange={(e) => handleCheckoutChange("zipCode", e.target.value)} placeholder="Código postal" className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500" />
-                            <input value={checkoutForm.cardName} onChange={(e) => handleCheckoutChange("cardName", e.target.value)} placeholder="Nombre del titular" className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500" />
-                            <input value={checkoutForm.cardNumber} onChange={(e) => handleCheckoutChange("cardNumber", e.target.value)} placeholder="Número de tarjeta" className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500 md:col-span-2" />
-                            <input value={checkoutForm.expiryDate} onChange={(e) => handleCheckoutChange("expiryDate", e.target.value)} placeholder="Fecha de vencimiento MM/AA" className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500" />
-                            <input value={checkoutForm.ccv} onChange={(e) => handleCheckoutChange("ccv", e.target.value)} placeholder="CCV" className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500" />
+                            <input value={checkoutForm.fullName} onChange={(e) => handleCheckoutChange("fullName", e.target.value)} placeholder="Nombre completo" maxLength={50} className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500" />
+                            <input value={checkoutForm.city} onChange={(e) => handleCheckoutChange("city", e.target.value)} placeholder="Ciudad" maxLength={50} className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500" />
+                            <input value={checkoutForm.address} onChange={(e) => handleCheckoutChange("address", e.target.value)} placeholder="Dirección" maxLength={150} className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500 md:col-span-2" />
+                            <input value={checkoutForm.zipCode} onChange={(e) => handleCheckoutChange("zipCode", e.target.value)} placeholder="Código postal" inputMode="numeric" maxLength={10} className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500" />
+                            <input value={checkoutForm.cardName} onChange={(e) => handleCheckoutChange("cardName", e.target.value)} placeholder="Nombre del titular" maxLength={40} className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500" />
+                            <input value={checkoutForm.cardNumber} onChange={(e) => handleCheckoutChange("cardNumber", e.target.value)} placeholder="Número de tarjeta" inputMode="numeric" maxLength={23} className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500 md:col-span-2" />
+                            <input value={checkoutForm.expiryDate} onChange={(e) => handleCheckoutChange("expiryDate", e.target.value)} placeholder="Fecha de vencimiento MM/AA" inputMode="numeric" maxLength={5} className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500" />
+                            <input value={checkoutForm.ccv} onChange={(e) => handleCheckoutChange("ccv", e.target.value)} placeholder="CCV" inputMode="numeric" maxLength={4} type="password" className="rounded-lg border border-white/10 bg-black px-4 py-3 outline-none focus:border-purple-500" />
                         </div>
 
                         <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-5">

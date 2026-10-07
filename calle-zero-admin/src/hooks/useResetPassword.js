@@ -40,8 +40,12 @@ export default function useResetPassword() {
       return;
     }
 
-    if (formData.newPassword.length < 8) {
-      toast.error("La contraseña debe tener mínimo 8 caracteres");
+    if (
+      formData.newPassword.length < 8 ||
+      !/[A-Za-z]/.test(formData.newPassword) ||
+      !/[0-9]/.test(formData.newPassword)
+    ) {
+      toast.error("La contraseña debe tener 8 caracteres o más y combinar letras y números");
       return;
     }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { apiFetch } from "../lib/api.js";
+import { isName, isPhone, isSafeText, MESSAGES } from "../utils/validators.js";
 
 export default function useProfile() {
   const [formData, setFormData] = useState({
@@ -64,6 +65,18 @@ export default function useProfile() {
 
     if (!formData.fullName.trim()) {
       toast.error("El nombre es requerido");
+      return;
+    }
+    if (!isName(formData.fullName)) {
+      toast.error(MESSAGES.name);
+      return;
+    }
+    if (formData.phone?.trim() && !isPhone(formData.phone)) {
+      toast.error(MESSAGES.phone);
+      return;
+    }
+    if (formData.location?.trim() && !isSafeText(formData.location, 3, 120)) {
+      toast.error("La ubicación debe tener entre 3 y 120 caracteres válidos");
       return;
     }
 
